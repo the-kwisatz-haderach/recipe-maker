@@ -1,0 +1,21 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Recipe {
+  id: ID!
+  name: String!
+}
+
+type Query {
+  recipes: [Recipe!]!
+  recipe(id: ID!): Recipe
+}
+
+input NewRecipe {
+  name: String!
+}
+
+type Mutation {
+  createRecipe(input: NewRecipe!): Recipe!
+}
