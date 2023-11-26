@@ -3,19 +3,40 @@
 # https://gqlgen.com/getting-started/
 
 type Recipe {
+  id: Int!
+  recipe_name: String!
+}
+
+type User {
   id: ID!
-  name: String!
+  username: String!
+  email: String!
+  password: String!
 }
 
 type Query {
   recipes: [Recipe!]!
-  recipe(id: ID!): Recipe
+  recipe(id: Int!): Recipe
 }
 
-input NewRecipe {
-  name: String!
+input SignupInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  username: String!
+  password: String!
+}
+
+input RecipeInput {
+  recipe_name: String!
 }
 
 type Mutation {
-  createRecipe(input: NewRecipe!): Recipe!
+  createRecipe(input: RecipeInput!): Recipe!
+  signup(input: SignupInput!): User
+  login(input: LoginInput): User
+  logout: Boolean
 }

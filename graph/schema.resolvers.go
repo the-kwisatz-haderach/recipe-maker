@@ -12,9 +12,32 @@ import (
 )
 
 // CreateRecipe is the resolver for the createRecipe field.
-func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.NewRecipe) (*model.Recipe, error) {
-	m := r.Db.CreateRecipe(ctx, input.Name)
-	return m, nil
+func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error) {
+	return r.Db.CreateRecipe(ctx, input.RecipeName)
+}
+
+// Signup is the resolver for the signup field.
+func (r *mutationResolver) Signup(ctx context.Context, input model.SignupInput) (*model.User, error) {
+	u, err := r.Db.FindUser(ctx, input.Username, input.Email)
+	if u != nil {
+		return u, err
+	}
+	encryptedPass, err := r.Auth.HashPassword(ctx, input.Password)
+	if err != nil {
+		return nil, err
+	}
+	input.Password = string(encryptedPass)
+	return r.Db.CreateUser(ctx, input)
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input *model.LoginInput) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: Login - login"))
+}
+
+// Logout is the resolver for the logout field.
+func (r *mutationResolver) Logout(ctx context.Context) (*bool, error) {
+	panic(fmt.Errorf("not implemented: Logout - logout"))
 }
 
 // Recipes is the resolver for the recipes field.
@@ -23,7 +46,7 @@ func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
 }
 
 // Recipe is the resolver for the recipe field.
-func (r *queryResolver) Recipe(ctx context.Context, id string) (*model.Recipe, error) {
+func (r *queryResolver) Recipe(ctx context.Context, id int) (*model.Recipe, error) {
 	panic(fmt.Errorf("not implemented: Recipe - recipe"))
 }
 

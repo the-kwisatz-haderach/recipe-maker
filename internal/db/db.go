@@ -2,37 +2,61 @@ package db
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
 )
 
-func ConnectDb(ctx context.Context, conStr string) *Persistance {
+func ConnectDb(ctx context.Context, conStr string) (*Persistance, func()) {
 	pool, err := pgxpool.New(ctx, conStr)
+	close := func() {
+		pool.Close()
+	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("")
 	}
-	defer pool.Close()
-	data, err := os.ReadFile("internal/db/main.sql")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := pool.Exec(ctx, string(data)); err != nil {
-		log.Fatal(err)
-	}
-	return &Persistance{db: pool}
+
+	return &Persistance{db: pool}, close
 }
 
 type Persistance struct {
 	db *pgxpool.Pool
 }
 
-func (p *Persistance) CreateRecipe(ctx context.Context, name string) *model.Recipe {
-	var m *model.Recipe
-	row := p.db.QueryRow(ctx, "INSERT INTO recipes (recipe_name) VALUES ($1)", name).Scan()
-	return m
+func (p *Persistance) CreateRecipe(ctx context.Context, name string) (*model.Recipe, error) {
+	var m model.Recipe
+	m.RecipeName = name
+
+	err := p.db.QueryRow(ctx, "insert into recipes (recipe_name) values ($1) returning id", name).Scan(&m.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("error while creating recipe")
+		return nil, err
+	}
+	return &m, nil
+}
+
+func (p *Persistance) GetRecipes(ctx context.Context) ([]*model.Recipe, error) {
+	log.Panic().Msg("not implemented")
+	return nil, nil
+}
+
+func (p *Persistance) CreateUser(ctx context.Context, input model.SignupInput) (*model.User, error) {
+	var m = model.User{Email: input.Email, Username: input.Username}
+	err := p.db.QueryRow(ctx, "insert into users (username, password, email) values ($1,$2,$3) returning id", input.Username, input.Password, input.Email).Scan(&m.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("error while creating user")
+		return nil, err
+	}
+	return &m, nil
+}
+
+func (p *Persistance) FindUser(ctx context.Context, username string, email string) (*model.User, error) {
+	var m model.User
+	err := p.db.QueryRow(ctx, "select * from users where username = $1 or email = $2", username, email).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
+	if err != nil {
+		log.Error().Err(err).Msg("error when finding user")
+		return nil, err
+	}
+	return &m, nil
 }

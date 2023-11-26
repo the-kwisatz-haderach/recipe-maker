@@ -2,11 +2,29 @@
 
 package model
 
-type NewRecipe struct {
-	Name string `json:"name"`
+type LoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type Recipe struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         int    `json:"id"`
+	RecipeName string `json:"recipe_name"`
+}
+
+type RecipeInput struct {
+	RecipeName string `json:"recipe_name"`
+}
+
+type SignupInput struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type User struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
