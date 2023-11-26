@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
@@ -18,9 +19,9 @@ func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeI
 
 // Signup is the resolver for the signup field.
 func (r *mutationResolver) Signup(ctx context.Context, input model.SignupInput) (*model.User, error) {
-	u, err := r.Db.FindUser(ctx, input.Username, input.Email)
+	u, _ := r.Db.FindUser(ctx, input.Username)
 	if u != nil {
-		return u, err
+		return nil, errors.New("user already exists")
 	}
 	encryptedPass, err := r.Auth.HashPassword(ctx, input.Password)
 	if err != nil {
@@ -32,7 +33,15 @@ func (r *mutationResolver) Signup(ctx context.Context, input model.SignupInput) 
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input *model.LoginInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: Login - login"))
+	u, _ := r.Db.FindUser(ctx, input.Username)
+	if u == nil {
+		return nil, errors.New("invalid login credentials")
+	}
+	err := r.Auth.ComparePasswords(ctx, input.Password, []byte(u.Password))
+	if err != nil {
+		return nil, errors.New("invalid login credentials")
+	}
+	return u, nil
 }
 
 // Logout is the resolver for the logout field.

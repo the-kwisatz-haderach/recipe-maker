@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
@@ -50,11 +51,15 @@ func (p *Persistance) CreateUser(ctx context.Context, input model.SignupInput) (
 	return &m, nil
 }
 
-func (p *Persistance) FindUser(ctx context.Context, username string, email string) (*model.User, error) {
+func (p *Persistance) FindUser(ctx context.Context, username string) (*model.User, error) {
 	var m model.User
-	err := p.db.QueryRow(ctx, "select id, username, password, email from users where username = $1 or email = $2", username, email).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
+	err := p.db.QueryRow(ctx, "select id, username, password, email from users where username = $1", username).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("error when finding user")
+		if err == pgx.ErrNoRows {
+			log.Debug().Msgf("couldn't find user with username %s", username)
+		} else {
+			log.Error().Err(err).Msg("error when finding user")
+		}
 		return nil, err
 	}
 	return &m, nil
