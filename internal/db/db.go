@@ -27,7 +27,6 @@ type Persistance struct {
 func (p *Persistance) CreateRecipe(ctx context.Context, name string) (*model.Recipe, error) {
 	var m model.Recipe
 	m.RecipeName = name
-
 	err := p.db.QueryRow(ctx, "insert into recipes (recipe_name) values ($1) returning id", name).Scan(&m.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating recipe")
@@ -53,7 +52,7 @@ func (p *Persistance) CreateUser(ctx context.Context, input model.SignupInput) (
 
 func (p *Persistance) FindUser(ctx context.Context, username string, email string) (*model.User, error) {
 	var m model.User
-	err := p.db.QueryRow(ctx, "select * from users where username = $1 or email = $2", username, email).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
+	err := p.db.QueryRow(ctx, "select id, username, password, email from users where username = $1 or email = $2", username, email).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
 	if err != nil {
 		log.Error().Err(err).Msg("error when finding user")
 		return nil, err
