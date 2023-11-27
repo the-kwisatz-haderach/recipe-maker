@@ -7,27 +7,9 @@ type Recipe {
   recipe_name: String!
 }
 
-type User {
-  id: ID!
-  username: String!
-  email: String!
-  password: String!
-}
-
 type Query {
   recipes: [Recipe!]!
   recipe(id: Int!): Recipe
-}
-
-input SignupInput {
-  username: String!
-  email: String!
-  password: String!
-}
-
-input LoginInput {
-  username: String!
-  password: String!
 }
 
 input RecipeInput {
@@ -36,7 +18,4 @@ input RecipeInput {
 
 type Mutation {
   createRecipe(input: RecipeInput!): Recipe!
-  signup(input: SignupInput!): User
-  login(input: LoginInput): User
-  logout: Boolean
 }

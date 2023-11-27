@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
+	"github.com/the-kwisatz-haderach/recipemaker/internal/authservice"
 )
 
 func ConnectDb(ctx context.Context, conStr string) (*Persistance, func()) {
@@ -37,12 +38,32 @@ func (p *Persistance) CreateRecipe(ctx context.Context, name string) (*model.Rec
 }
 
 func (p *Persistance) GetRecipes(ctx context.Context) ([]*model.Recipe, error) {
-	log.Panic().Msg("not implemented")
-	return nil, nil
+	rows, err := p.db.Query(ctx, "select id, recipe_name from recipes")
+	if err != nil {
+		log.Error().Err(err).Msg("error while getting recipes")
+	}
+	defer rows.Close()
+
+	var recipes []*model.Recipe
+	for rows.Next() {
+		var r model.Recipe
+		err := rows.Scan(&r.ID, &r.RecipeName)
+		if err != nil {
+			return nil, err
+		}
+		recipes = append(recipes, &r)
+	}
+
+	// Check for errors from iterating over rows
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return recipes, nil
 }
 
-func (p *Persistance) CreateUser(ctx context.Context, input model.SignupInput) (*model.User, error) {
-	var m = model.User{Email: input.Email, Username: input.Username}
+func (p *Persistance) CreateUser(ctx context.Context, input authservice.SignupInput) (*authservice.User, error) {
+	var m = authservice.User{Email: input.Email, Username: input.Username}
 	err := p.db.QueryRow(ctx, "insert into users (username, password, email) values ($1,$2,$3) returning id", input.Username, input.Password, input.Email).Scan(&m.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating user")
@@ -51,8 +72,8 @@ func (p *Persistance) CreateUser(ctx context.Context, input model.SignupInput) (
 	return &m, nil
 }
 
-func (p *Persistance) FindUser(ctx context.Context, username string) (*model.User, error) {
-	var m model.User
+func (p *Persistance) FindUser(ctx context.Context, username string) (*authservice.User, error) {
+	var m authservice.User
 	err := p.db.QueryRow(ctx, "select id, username, password, email from users where username = $1", username).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {

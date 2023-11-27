@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/99designs/gqlgen v0.17.36
+	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.30.0

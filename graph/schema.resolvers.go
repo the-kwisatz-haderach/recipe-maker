@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
+	"github.com/the-kwisatz-haderach/recipemaker/internal/authservice"
 )
 
 // CreateRecipe is the resolver for the createRecipe field.
@@ -17,41 +18,12 @@ func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeI
 	return r.Db.CreateRecipe(ctx, input.RecipeName)
 }
 
-// Signup is the resolver for the signup field.
-func (r *mutationResolver) Signup(ctx context.Context, input model.SignupInput) (*model.User, error) {
-	u, _ := r.Db.FindUser(ctx, input.Username)
-	if u != nil {
-		return nil, errors.New("user already exists")
-	}
-	encryptedPass, err := r.Auth.HashPassword(ctx, input.Password)
-	if err != nil {
-		return nil, err
-	}
-	input.Password = string(encryptedPass)
-	return r.Db.CreateUser(ctx, input)
-}
-
-// Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input *model.LoginInput) (*model.User, error) {
-	u, _ := r.Db.FindUser(ctx, input.Username)
-	if u == nil {
-		return nil, errors.New("invalid login credentials")
-	}
-	err := r.Auth.ComparePasswords(ctx, input.Password, []byte(u.Password))
-	if err != nil {
-		return nil, errors.New("invalid login credentials")
-	}
-	return u, nil
-}
-
-// Logout is the resolver for the logout field.
-func (r *mutationResolver) Logout(ctx context.Context) (*bool, error) {
-	panic(fmt.Errorf("not implemented: Logout - logout"))
-}
-
 // Recipes is the resolver for the recipes field.
 func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: Recipes - recipes"))
+	if user := authservice.ForContext(ctx); user == nil {
+		return nil, errors.New("access denied")
+	}
+	return r.Db.GetRecipes(ctx)
 }
 
 // Recipe is the resolver for the recipe field.
@@ -67,3 +39,13 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) Logout(ctx context.Context) (*bool, error) {
+	panic(fmt.Errorf("not implemented: Logout - logout"))
+}

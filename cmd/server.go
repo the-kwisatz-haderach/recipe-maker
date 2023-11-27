@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/the-kwisatz-haderach/recipemaker/graph"
-	"github.com/the-kwisatz-haderach/recipemaker/internal/auth"
+	"github.com/the-kwisatz-haderach/recipemaker/internal/authservice"
 	"github.com/the-kwisatz-haderach/recipemaker/internal/config"
 	db "github.com/the-kwisatz-haderach/recipemaker/internal/db"
 )
@@ -29,11 +29,21 @@ func main() {
 	db, close := db.ConnectDb(ctx, c.DATABASE_URL)
 	defer close()
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{Db: db, Auth: &auth.Authenticator{}}}))
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	authService := authservice.NewAuthService(db)
+	router := http.NewServeMux()
+
+	// Authentication service
+	router.HandleFunc("/login", authService.LoginHandler)
+	router.HandleFunc("/signup", authService.SignupHandler)
+	router.HandleFunc("/logout", authService.LogoutHandler)
+
+	// GraphQL server
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{Db: db}}))
+	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/query", authService.Middleware(srv))
+
 	log.Info().Msgf("connect to http://localhost:%s/ for GraphQL playground", c.PORT)
-	if err := http.ListenAndServe(":"+c.PORT, nil); err != nil {
-		log.Fatal().Err(err).Msg("")
+	if err := http.ListenAndServe(":"+c.PORT, router); err != nil {
+		log.Fatal().Err(err).Msg("server interrupted")
 	}
 }
