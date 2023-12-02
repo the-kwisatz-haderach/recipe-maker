@@ -4,7 +4,7 @@
 
 type Recipe {
   id: ID!
-  recipe_name: String!
+  name: String!
 }
 
 type RecipeRole {
@@ -19,15 +19,37 @@ type Ingredient {
   name: String!
 }
 
+type PantryItem {
+  id: ID!
+  name: String!
+  quantity: Int!
+  unit: String!
+}
+
 type Query {
   recipes: [Recipe!]!
-  recipe(id: ID!): Recipe
+  recipe(id: ID!): Recipe!
+  ingredients: [Ingredient!]!
+  ingredient(id: ID!): Ingredient!
+  pantryItems: [PantryItem!]!
+  pantryItem(id: ID!): PantryItem!
 }
 
 input RecipeInput {
-  recipe_name: String!
+  name: String!
+}
+
+input IngredientInput {
+  name: String!
+}
+
+input UpdatePantryInput {
+  ingredient_id: ID!
+  quantity: Int
 }
 
 type Mutation {
-  createRecipe(input: RecipeInput!): Recipe!
+  saveRecipe(input: RecipeInput!): Recipe!
+  createIngredient(input: IngredientInput!): Ingredient!
+  updatePantry(input: UpdatePantryInput!): PantryItem!
 }

@@ -13,13 +13,23 @@ import (
 	"github.com/the-kwisatz-haderach/recipemaker/internal/authservice"
 )
 
-// CreateRecipe is the resolver for the createRecipe field.
-func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error) {
+// SaveRecipe is the resolver for the saveRecipe field.
+func (r *mutationResolver) SaveRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error) {
 	if user := authservice.GetUser(ctx); user == nil {
 		return nil, errors.New("access denied")
 	} else {
-		return r.Db.CreateRecipe(ctx, input.RecipeName, user.ID)
+		return r.Db.CreateRecipe(ctx, input.Name, user.ID)
 	}
+}
+
+// CreateIngredient is the resolver for the createIngredient field.
+func (r *mutationResolver) CreateIngredient(ctx context.Context, input model.IngredientInput) (*model.Ingredient, error) {
+	panic(fmt.Errorf("not implemented: CreateIngredient - createIngredient"))
+}
+
+// UpdatePantry is the resolver for the updatePantry field.
+func (r *mutationResolver) UpdatePantry(ctx context.Context, input model.UpdatePantryInput) (*model.PantryItem, error) {
+	panic(fmt.Errorf("not implemented: UpdatePantry - updatePantry"))
 }
 
 // Recipes is the resolver for the recipes field.
@@ -34,6 +44,26 @@ func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
 // Recipe is the resolver for the recipe field.
 func (r *queryResolver) Recipe(ctx context.Context, id string) (*model.Recipe, error) {
 	panic(fmt.Errorf("not implemented: Recipe - recipe"))
+}
+
+// Ingredients is the resolver for the ingredients field.
+func (r *queryResolver) Ingredients(ctx context.Context) ([]*model.Ingredient, error) {
+	panic(fmt.Errorf("not implemented: Ingredients - ingredients"))
+}
+
+// Ingredient is the resolver for the ingredient field.
+func (r *queryResolver) Ingredient(ctx context.Context, id string) (*model.Ingredient, error) {
+	panic(fmt.Errorf("not implemented: Ingredient - ingredient"))
+}
+
+// PantryItems is the resolver for the pantryItems field.
+func (r *queryResolver) PantryItems(ctx context.Context) ([]*model.PantryItem, error) {
+	panic(fmt.Errorf("not implemented: PantryItems - pantryItems"))
+}
+
+// PantryItem is the resolver for the pantryItem field.
+func (r *queryResolver) PantryItem(ctx context.Context, id string) (*model.PantryItem, error) {
+	panic(fmt.Errorf("not implemented: PantryItem - pantryItem"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -51,6 +81,13 @@ type queryResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error) {
+	if user := authservice.GetUser(ctx); user == nil {
+		return nil, errors.New("access denied")
+	} else {
+		return r.Db.CreateRecipe(ctx, input.Name, user.ID)
+	}
+}
 func (r *mutationResolver) Logout(ctx context.Context) (*bool, error) {
 	panic(fmt.Errorf("not implemented: Logout - logout"))
 }

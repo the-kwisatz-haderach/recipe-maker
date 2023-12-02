@@ -45,18 +45,36 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Ingredient struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
 	Mutation struct {
-		CreateRecipe func(childComplexity int, input model.RecipeInput) int
+		CreateIngredient func(childComplexity int, input model.IngredientInput) int
+		SaveRecipe       func(childComplexity int, input model.RecipeInput) int
+		UpdatePantry     func(childComplexity int, input model.UpdatePantryInput) int
+	}
+
+	PantryItem struct {
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Quantity func(childComplexity int) int
+		Unit     func(childComplexity int) int
 	}
 
 	Query struct {
-		Recipe  func(childComplexity int, id string) int
-		Recipes func(childComplexity int) int
+		Ingredient  func(childComplexity int, id string) int
+		Ingredients func(childComplexity int) int
+		PantryItem  func(childComplexity int, id string) int
+		PantryItems func(childComplexity int) int
+		Recipe      func(childComplexity int, id string) int
+		Recipes     func(childComplexity int) int
 	}
 
 	Recipe struct {
-		ID         func(childComplexity int) int
-		RecipeName func(childComplexity int) int
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	RecipeRole struct {
@@ -68,11 +86,17 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error)
+	SaveRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error)
+	CreateIngredient(ctx context.Context, input model.IngredientInput) (*model.Ingredient, error)
+	UpdatePantry(ctx context.Context, input model.UpdatePantryInput) (*model.PantryItem, error)
 }
 type QueryResolver interface {
 	Recipes(ctx context.Context) ([]*model.Recipe, error)
 	Recipe(ctx context.Context, id string) (*model.Recipe, error)
+	Ingredients(ctx context.Context) ([]*model.Ingredient, error)
+	Ingredient(ctx context.Context, id string) (*model.Ingredient, error)
+	PantryItems(ctx context.Context) ([]*model.PantryItem, error)
+	PantryItem(ctx context.Context, id string) (*model.PantryItem, error)
 }
 
 type executableSchema struct {
@@ -90,17 +114,121 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Mutation.createRecipe":
-		if e.complexity.Mutation.CreateRecipe == nil {
+	case "Ingredient.id":
+		if e.complexity.Ingredient.ID == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createRecipe_args(context.TODO(), rawArgs)
+		return e.complexity.Ingredient.ID(childComplexity), true
+
+	case "Ingredient.name":
+		if e.complexity.Ingredient.Name == nil {
+			break
+		}
+
+		return e.complexity.Ingredient.Name(childComplexity), true
+
+	case "Mutation.createIngredient":
+		if e.complexity.Mutation.CreateIngredient == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createIngredient_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateRecipe(childComplexity, args["input"].(model.RecipeInput)), true
+		return e.complexity.Mutation.CreateIngredient(childComplexity, args["input"].(model.IngredientInput)), true
+
+	case "Mutation.saveRecipe":
+		if e.complexity.Mutation.SaveRecipe == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveRecipe_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveRecipe(childComplexity, args["input"].(model.RecipeInput)), true
+
+	case "Mutation.updatePantry":
+		if e.complexity.Mutation.UpdatePantry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePantry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePantry(childComplexity, args["input"].(model.UpdatePantryInput)), true
+
+	case "PantryItem.id":
+		if e.complexity.PantryItem.ID == nil {
+			break
+		}
+
+		return e.complexity.PantryItem.ID(childComplexity), true
+
+	case "PantryItem.name":
+		if e.complexity.PantryItem.Name == nil {
+			break
+		}
+
+		return e.complexity.PantryItem.Name(childComplexity), true
+
+	case "PantryItem.quantity":
+		if e.complexity.PantryItem.Quantity == nil {
+			break
+		}
+
+		return e.complexity.PantryItem.Quantity(childComplexity), true
+
+	case "PantryItem.unit":
+		if e.complexity.PantryItem.Unit == nil {
+			break
+		}
+
+		return e.complexity.PantryItem.Unit(childComplexity), true
+
+	case "Query.ingredient":
+		if e.complexity.Query.Ingredient == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ingredient_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Ingredient(childComplexity, args["id"].(string)), true
+
+	case "Query.ingredients":
+		if e.complexity.Query.Ingredients == nil {
+			break
+		}
+
+		return e.complexity.Query.Ingredients(childComplexity), true
+
+	case "Query.pantryItem":
+		if e.complexity.Query.PantryItem == nil {
+			break
+		}
+
+		args, err := ec.field_Query_pantryItem_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PantryItem(childComplexity, args["id"].(string)), true
+
+	case "Query.pantryItems":
+		if e.complexity.Query.PantryItems == nil {
+			break
+		}
+
+		return e.complexity.Query.PantryItems(childComplexity), true
 
 	case "Query.recipe":
 		if e.complexity.Query.Recipe == nil {
@@ -128,12 +256,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Recipe.ID(childComplexity), true
 
-	case "Recipe.recipe_name":
-		if e.complexity.Recipe.RecipeName == nil {
+	case "Recipe.name":
+		if e.complexity.Recipe.Name == nil {
 			break
 		}
 
-		return e.complexity.Recipe.RecipeName(childComplexity), true
+		return e.complexity.Recipe.Name(childComplexity), true
 
 	case "RecipeRole.id":
 		if e.complexity.RecipeRole.ID == nil {
@@ -171,7 +299,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputIngredientInput,
 		ec.unmarshalInputRecipeInput,
+		ec.unmarshalInputUpdatePantryInput,
 	)
 	first := true
 
@@ -288,13 +418,43 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createIngredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.IngredientInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_saveRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.RecipeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePantry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdatePantryInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdatePantryInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -315,6 +475,36 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_ingredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_pantryItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -371,8 +561,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Mutation_createRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createRecipe(ctx, field)
+func (ec *executionContext) _Ingredient_id(ctx context.Context, field graphql.CollectedField, obj *model.Ingredient) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Ingredient_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -385,7 +575,95 @@ func (ec *executionContext) _Mutation_createRecipe(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRecipe(rctx, fc.Args["input"].(model.RecipeInput))
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Ingredient_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Ingredient",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Ingredient_name(ctx context.Context, field graphql.CollectedField, obj *model.Ingredient) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Ingredient_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Ingredient_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Ingredient",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_saveRecipe(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SaveRecipe(rctx, fc.Args["input"].(model.RecipeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -402,7 +680,7 @@ func (ec *executionContext) _Mutation_createRecipe(ctx context.Context, field gr
 	return ec.marshalNRecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_saveRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -412,8 +690,8 @@ func (ec *executionContext) fieldContext_Mutation_createRecipe(ctx context.Conte
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Recipe_id(ctx, field)
-			case "recipe_name":
-				return ec.fieldContext_Recipe_recipe_name(ctx, field)
+			case "name":
+				return ec.fieldContext_Recipe_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Recipe", field.Name)
 		},
@@ -425,9 +703,311 @@ func (ec *executionContext) fieldContext_Mutation_createRecipe(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_saveRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createIngredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createIngredient(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateIngredient(rctx, fc.Args["input"].(model.IngredientInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Ingredient)
+	fc.Result = res
+	return ec.marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createIngredient(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Ingredient_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Ingredient_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Ingredient", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createIngredient_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePantry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updatePantry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePantry(rctx, fc.Args["input"].(model.UpdatePantryInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PantryItem)
+	fc.Result = res
+	return ec.marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePantry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PantryItem_id(ctx, field)
+			case "name":
+				return ec.fieldContext_PantryItem_name(ctx, field)
+			case "quantity":
+				return ec.fieldContext_PantryItem_quantity(ctx, field)
+			case "unit":
+				return ec.fieldContext_PantryItem_unit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PantryItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePantry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PantryItem_id(ctx context.Context, field graphql.CollectedField, obj *model.PantryItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PantryItem_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PantryItem_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PantryItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PantryItem_name(ctx context.Context, field graphql.CollectedField, obj *model.PantryItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PantryItem_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PantryItem_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PantryItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PantryItem_quantity(ctx context.Context, field graphql.CollectedField, obj *model.PantryItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PantryItem_quantity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PantryItem_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PantryItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PantryItem_unit(ctx context.Context, field graphql.CollectedField, obj *model.PantryItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PantryItem_unit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Unit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PantryItem_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PantryItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -473,8 +1053,8 @@ func (ec *executionContext) fieldContext_Query_recipes(ctx context.Context, fiel
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Recipe_id(ctx, field)
-			case "recipe_name":
-				return ec.fieldContext_Recipe_recipe_name(ctx, field)
+			case "name":
+				return ec.fieldContext_Recipe_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Recipe", field.Name)
 		},
@@ -503,11 +1083,14 @@ func (ec *executionContext) _Query_recipe(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Recipe)
 	fc.Result = res
-	return ec.marshalORecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res)
+	return ec.marshalNRecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_recipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -520,8 +1103,8 @@ func (ec *executionContext) fieldContext_Query_recipe(ctx context.Context, field
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Recipe_id(ctx, field)
-			case "recipe_name":
-				return ec.fieldContext_Recipe_recipe_name(ctx, field)
+			case "name":
+				return ec.fieldContext_Recipe_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Recipe", field.Name)
 		},
@@ -534,6 +1117,236 @@ func (ec *executionContext) fieldContext_Query_recipe(ctx context.Context, field
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_recipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ingredients(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ingredients(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Ingredients(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Ingredient)
+	fc.Result = res
+	return ec.marshalNIngredient2ᚕᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ingredients(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Ingredient_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Ingredient_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Ingredient", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ingredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ingredient(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Ingredient(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Ingredient)
+	fc.Result = res
+	return ec.marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ingredient(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Ingredient_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Ingredient_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Ingredient", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ingredient_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pantryItems(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_pantryItems(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PantryItems(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PantryItem)
+	fc.Result = res
+	return ec.marshalNPantryItem2ᚕᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_pantryItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PantryItem_id(ctx, field)
+			case "name":
+				return ec.fieldContext_PantryItem_name(ctx, field)
+			case "quantity":
+				return ec.fieldContext_PantryItem_quantity(ctx, field)
+			case "unit":
+				return ec.fieldContext_PantryItem_unit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PantryItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pantryItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_pantryItem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PantryItem(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PantryItem)
+	fc.Result = res
+	return ec.marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_pantryItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PantryItem_id(ctx, field)
+			case "name":
+				return ec.fieldContext_PantryItem_name(ctx, field)
+			case "quantity":
+				return ec.fieldContext_PantryItem_quantity(ctx, field)
+			case "unit":
+				return ec.fieldContext_PantryItem_unit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PantryItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_pantryItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -713,8 +1526,8 @@ func (ec *executionContext) fieldContext_Recipe_id(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Recipe_recipe_name(ctx context.Context, field graphql.CollectedField, obj *model.Recipe) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Recipe_recipe_name(ctx, field)
+func (ec *executionContext) _Recipe_name(ctx context.Context, field graphql.CollectedField, obj *model.Recipe) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Recipe_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -727,7 +1540,7 @@ func (ec *executionContext) _Recipe_recipe_name(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RecipeName, nil
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -744,7 +1557,7 @@ func (ec *executionContext) _Recipe_recipe_name(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Recipe_recipe_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Recipe_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Recipe",
 		Field:      field,
@@ -2706,6 +3519,35 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputIngredientInput(ctx context.Context, obj interface{}) (model.IngredientInput, error) {
+	var it model.IngredientInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRecipeInput(ctx context.Context, obj interface{}) (model.RecipeInput, error) {
 	var it model.RecipeInput
 	asMap := map[string]interface{}{}
@@ -2713,22 +3555,60 @@ func (ec *executionContext) unmarshalInputRecipeInput(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"recipe_name"}
+	fieldsInOrder := [...]string{"name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "recipe_name":
+		case "name":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recipe_name"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RecipeName = data
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePantryInput(ctx context.Context, obj interface{}) (model.UpdatePantryInput, error) {
+	var it model.UpdatePantryInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ingredient_id", "quantity"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ingredient_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ingredient_id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IngredientID = data
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Quantity = data
 		}
 	}
 
@@ -2742,6 +3622,50 @@ func (ec *executionContext) unmarshalInputRecipeInput(ctx context.Context, obj i
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var ingredientImplementors = []string{"Ingredient"}
+
+func (ec *executionContext) _Ingredient(ctx context.Context, sel ast.SelectionSet, obj *model.Ingredient) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, ingredientImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Ingredient")
+		case "id":
+			out.Values[i] = ec._Ingredient_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Ingredient_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -2762,10 +3686,78 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createRecipe":
+		case "saveRecipe":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createRecipe(ctx, field)
+				return ec._Mutation_saveRecipe(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createIngredient":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createIngredient(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatePantry":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePantry(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pantryItemImplementors = []string{"PantryItem"}
+
+func (ec *executionContext) _PantryItem(ctx context.Context, sel ast.SelectionSet, obj *model.PantryItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pantryItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PantryItem")
+		case "id":
+			out.Values[i] = ec._PantryItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._PantryItem_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._PantryItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unit":
+			out.Values[i] = ec._PantryItem_unit(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -2843,6 +3835,97 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_recipe(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ingredients":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ingredients(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ingredient":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ingredient(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pantryItems":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pantryItems(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pantryItem":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pantryItem(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -2899,8 +3982,8 @@ func (ec *executionContext) _Recipe(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "recipe_name":
-			out.Values[i] = ec._Recipe_recipe_name(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._Recipe_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3337,6 +4420,142 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) marshalNIngredient2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx context.Context, sel ast.SelectionSet, v model.Ingredient) graphql.Marshaler {
+	return ec._Ingredient(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNIngredient2ᚕᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Ingredient) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx context.Context, sel ast.SelectionSet, v *model.Ingredient) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Ingredient(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientInput(ctx context.Context, v interface{}) (model.IngredientInput, error) {
+	res, err := ec.unmarshalInputIngredientInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNPantryItem2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx context.Context, sel ast.SelectionSet, v model.PantryItem) graphql.Marshaler {
+	return ec._PantryItem(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPantryItem2ᚕᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PantryItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx context.Context, sel ast.SelectionSet, v *model.PantryItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PantryItem(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNRecipe2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx context.Context, sel ast.SelectionSet, v model.Recipe) graphql.Marshaler {
 	return ec._Recipe(ctx, sel, &v)
 }
@@ -3413,6 +4632,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdatePantryInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryInput(ctx context.Context, v interface{}) (model.UpdatePantryInput, error) {
+	res, err := ec.unmarshalInputUpdatePantryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3694,11 +4918,20 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalORecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx context.Context, sel ast.SelectionSet, v *model.Recipe) graphql.Marshaler {
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._Recipe(ctx, sel, v)
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

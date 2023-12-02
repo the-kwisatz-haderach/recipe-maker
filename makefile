@@ -16,7 +16,6 @@ db-migrate-up:
 
 db-create-migration: 
 	~/go/bin/tern new $(name) \
-	--config migrations/tern.conf \
 	--migrations migrations
 
 # https://github.com/99designs/gqlgen
