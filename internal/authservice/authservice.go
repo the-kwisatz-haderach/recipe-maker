@@ -3,12 +3,19 @@ package authservice
 import (
 	"encoding/json"
 	"net/http"
+	"time"
+
+	"github.com/the-kwisatz-haderach/recipemaker/internal/config"
 )
 
 const cookieName = "session-cookie"
 
 func NewAuthService(db userStorage) AuthService {
-	var auth Authenticator
+	var auth = Authenticator{
+		signingSecret:           config.Config.JWT_SIGNING_SECRET,
+		shouldValidateJwt:       config.Config.VALIDATE_JWT,
+		tokenExpirationDuration: time.Hour * 24,
+	}
 	return AuthService{Db: db, Auth: &auth}
 }
 
@@ -49,6 +56,8 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenStr,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		Expires:  time.Now().Add(time.Hour * 24),
 	}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
@@ -82,7 +91,10 @@ func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	input.Password = string(encryptedPass)
-	as.Db.CreateUser(ctx, input)
+	if _, err = as.Db.CreateUser(ctx, input); err != nil {
+		http.Error(w, "unable to create user", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

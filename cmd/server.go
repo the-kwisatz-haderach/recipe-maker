@@ -18,6 +18,10 @@ import (
 
 var envFlag = flag.String("env", "development", "environment")
 
+func init() {
+	config.InitConfiguration()
+}
+
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	if *envFlag == "development" {
@@ -25,8 +29,8 @@ func main() {
 	}
 
 	ctx := context.Background()
-	c := config.GetConfig()
-	db, close := db.ConnectDb(ctx, c.DATABASE_URL)
+
+	db, close := db.ConnectDb(ctx, config.Config.DATABASE_URL)
 	defer close()
 
 	authService := authservice.NewAuthService(db)
@@ -42,8 +46,8 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", authService.Middleware(srv))
 
-	log.Info().Msgf("connect to http://localhost:%s/ for GraphQL playground", c.PORT)
-	if err := http.ListenAndServe(":"+c.PORT, router); err != nil {
+	log.Info().Msgf("connect to http://localhost:%s/ for GraphQL playground", config.Config.PORT)
+	if err := http.ListenAndServe(":"+config.Config.PORT, router); err != nil {
 		log.Fatal().Err(err).Msg("server interrupted")
 	}
 }

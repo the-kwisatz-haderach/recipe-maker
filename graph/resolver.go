@@ -12,7 +12,7 @@ import (
 
 type Persistance interface {
 	CreateRecipe(ctx context.Context, name string) (*model.Recipe, error)
-	GetRecipes(ctx context.Context) ([]*model.Recipe, error)
+	GetRecipes(ctx context.Context, username string) ([]*model.Recipe, error)
 	// Signup(ctx context.Context, input model.SignupInput) (*model.User, error)
 	// Login(ctx context.Context, input model.LoginInput) (*model.User, error)
 	// Logout(ctx context.Context) error

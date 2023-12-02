@@ -15,35 +15,28 @@ func (as *AuthService) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie(cookieName)
 		if err != nil {
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 			return
 		}
 
-		// h := r.Header.Get("Authorization")
-		// s := strings.Split(h, " ")
-		// if err != nil || len(s) != 2 {
-		// 	next.ServeHTTP(w, r)
-		// 	return
-		// }
-
-		//tokenStr := s[1]
 		ctx := r.Context()
 		tokenStr := c.Value
 
 		jwt, err := as.Auth.ValidateJWT(ctx, tokenStr)
 		if err != nil {
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 			return
 		}
 
-		username, err := jwt.Claims.GetSubject()
+		id, err := jwt.Claims.GetSubject()
 		if err != nil {
-			http.Error(w, "invalid claims", http.StatusUnauthorized)
+			http.Error(w, `{"error":"invalid claims"}`, http.StatusUnauthorized)
 			return
 		}
 
-		user, err := as.Db.FindUser(ctx, username)
+		user, err := as.Db.FindUser(ctx, id)
 		if err != nil {
+			http.Error(w, `{"error":"invalid claims"}`, http.StatusUnauthorized)
 			return
 		}
 
@@ -53,8 +46,8 @@ func (as *AuthService) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-// ForContext finds the user from the context. REQUIRES Middleware to have run.
-func ForContext(ctx context.Context) *User {
+// GetUser gets the user from the context. Requires middleware to have run.
+func GetUser(ctx context.Context) *User {
 	raw, _ := ctx.Value(userCtxKey).(*User)
 	return raw
 }

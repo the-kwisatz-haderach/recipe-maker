@@ -26,10 +26,10 @@ type Persistance struct {
 	db *pgxpool.Pool
 }
 
-func (p *Persistance) CreateRecipe(ctx context.Context, name string) (*model.Recipe, error) {
+func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string) (*model.Recipe, error) {
 	var m model.Recipe
-	m.RecipeName = name
-	err := p.db.QueryRow(ctx, "insert into recipes (recipe_name) values ($1) returning id", name).Scan(&m.ID)
+	m.RecipeName = recipeName
+	err := p.db.QueryRow(ctx, "insert into recipes (recipe_name) values ($1) returning id", recipeName).Scan(&m.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating recipe")
 		return nil, err
@@ -37,10 +37,15 @@ func (p *Persistance) CreateRecipe(ctx context.Context, name string) (*model.Rec
 	return &m, nil
 }
 
-func (p *Persistance) GetRecipes(ctx context.Context) ([]*model.Recipe, error) {
-	rows, err := p.db.Query(ctx, "select id, recipe_name from recipes")
+func (p *Persistance) GetRecipes(ctx context.Context, username string) ([]*model.Recipe, error) {
+	rows, err := p.db.Query(ctx, "select id, recipe_name from recipes where username = $1", username)
 	if err != nil {
-		log.Error().Err(err).Msg("error while getting recipes")
+		if err == pgx.ErrNoRows {
+			log.Debug().Err(err).Msg("no rows")
+		} else {
+			log.Error().Err(err).Msg("unknown error while getting recipes")
+		}
+		return nil, err
 	}
 	defer rows.Close()
 

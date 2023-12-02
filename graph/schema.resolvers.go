@@ -20,10 +20,11 @@ func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeI
 
 // Recipes is the resolver for the recipes field.
 func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
-	if user := authservice.ForContext(ctx); user == nil {
+	if user := authservice.GetUser(ctx); user == nil {
 		return nil, errors.New("access denied")
+	} else {
+		return r.Db.GetRecipes(ctx, user.Username)
 	}
-	return r.Db.GetRecipes(ctx)
 }
 
 // Recipe is the resolver for the recipe field.
