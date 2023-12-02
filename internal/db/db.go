@@ -30,12 +30,12 @@ func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string, userI
 	var m model.Recipe
 	m.RecipeName = recipeName
 	q := `
-		with new_recipe as (
-			insert into recipes (recipe_name) values ($1) returning id
+		WITH new_recipe AS (
+			INSERT INTO recipe (recipe_name) VALUES ($1) RETURNING id
 		)
-		insert into recipe_roles (recipe_id, user_id, relation)
-		select id, $2, $3 from new_recipe 
-			returning recipe_id;
+		INSERT INTO recipe_role (recipe_id, user_id, relation)
+		SELECT id, $2, $3 FROM new_recipe 
+			RETURNING recipe_id;
 	`
 	err := p.db.QueryRow(ctx, q, recipeName, userID, "owner").Scan(&m.ID)
 	if err != nil {
@@ -47,7 +47,7 @@ func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string, userI
 
 func (p *Persistance) GetRecipes(ctx context.Context, userID string) ([]*model.Recipe, error) {
 	q := `
-		select r.id, r.recipe_name from recipes r join recipe_roles rr on rr.recipe_id = r.id where rr.user_id = $1;
+		SELECT r.id, r.recipe_name FROM recipe r JOIN recipe_role rr ON rr.recipe_id = r.id WHERE rr.user_id = $1;
 	`
 	rows, err := p.db.Query(ctx, q, userID)
 	if err != nil {
@@ -80,7 +80,7 @@ func (p *Persistance) GetRecipes(ctx context.Context, userID string) ([]*model.R
 
 func (p *Persistance) CreateUser(ctx context.Context, input authservice.SignupInput) (*authservice.User, error) {
 	var m = authservice.User{Email: input.Email, Username: input.Username}
-	err := p.db.QueryRow(ctx, "insert into users (username, password, email) values ($1,$2,$3) returning id", input.Username, input.Password, input.Email).Scan(&m.ID)
+	err := p.db.QueryRow(ctx, "INSERT INTO \"user\" (username, password, email) VALUES ($1,$2,$3) RETURNING id", input.Username, input.Password, input.Email).Scan(&m.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating user")
 		return nil, err
@@ -90,7 +90,7 @@ func (p *Persistance) CreateUser(ctx context.Context, input authservice.SignupIn
 
 func (p *Persistance) FindUser(ctx context.Context, userID string) (*authservice.User, error) {
 	var m authservice.User
-	err := p.db.QueryRow(ctx, "select id, username, password, email from users where id = $1", userID).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
+	err := p.db.QueryRow(ctx, "SELECT id, username, password, email FROM \"user\" WHERE id = $1", userID).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			log.Debug().Msgf("couldn't find user with id %s", userID)

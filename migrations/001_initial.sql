@@ -1,36 +1,38 @@
 -- Write your migrate up statements here
-create extension if not exists "uuid-ossp";
+CREATE extension IF NOT EXISTS "uuid-ossp";
 
-create table
-  recipes (
-    id uuid primary key default uuid_generate_v4 (),
-    recipe_name varchar(255) not null
+CREATE TABLE
+  recipe (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    recipe_name VARCHAR(255) NOT NULL
   );
 
-create table
-  recipe_roles (
-    id uuid primary key default uuid_generate_v4 (),
-    recipe_id uuid not null,
-    user_id uuid not null,
-    relation varchar(255) default 'viewer' not null
+CREATE TABLE
+  recipe_user (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    recipe_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    relation VARCHAR(255) DEFAULT 'viewer' NOT NULL
   );
 
-create table
-  users (
-    id uuid primary key default uuid_generate_v4 (),
-    username varchar(255),
-    password varchar(255) not null,
-    email varchar(255) not null unique
+CREATE TABLE
+  "user" (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    username VARCHAR(255),
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
   );
 
-alter table recipe_roles add foreign key (user_id) references users (id);
+ALTER TABLE recipe_user ADD FOREIGN KEY (user_id) REFERENCES "user" (id);
 
-alter table recipe_roles add foreign key (recipe_id) references recipes (id);
+ALTER TABLE recipe_user ADD FOREIGN KEY (recipe_id) REFERENCES recipe (id);
 
 ---- create above / drop below ----
-drop table recipes;
+DROP TABLE IF EXISTS recipe CASCADE;
 
-drop table users;
+DROP TABLE IF EXISTS "user" CASCADE;
+
+DROP TABLE IF EXISTS recipe_user CASCADE;
 
 -- Write your migrate down statements here. If this migration is irreversible
 -- Then delete the separator line above.

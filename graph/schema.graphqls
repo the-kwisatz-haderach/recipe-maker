@@ -14,6 +14,11 @@ type RecipeRole {
   relation: String!
 }
 
+type Ingredient {
+  id: ID!
+  name: String!
+}
+
 type Query {
   recipes: [Recipe!]!
   recipe(id: ID!): Recipe
