@@ -26,10 +26,18 @@ type Persistance struct {
 	db *pgxpool.Pool
 }
 
-func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string) (*model.Recipe, error) {
+func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string, userID string) (*model.Recipe, error) {
 	var m model.Recipe
 	m.RecipeName = recipeName
-	err := p.db.QueryRow(ctx, "insert into recipes (recipe_name) values ($1) returning id", recipeName).Scan(&m.ID)
+	q := `
+		with new_recipe as (
+			insert into recipes (recipe_name) values ($1) returning id
+		)
+		insert into recipe_roles (recipe_id, user_id, relation)
+		select id, $2, $3 from new_recipe 
+			returning recipe_id;
+	`
+	err := p.db.QueryRow(ctx, q, recipeName, userID, "owner").Scan(&m.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating recipe")
 		return nil, err
@@ -37,8 +45,11 @@ func (p *Persistance) CreateRecipe(ctx context.Context, recipeName string) (*mod
 	return &m, nil
 }
 
-func (p *Persistance) GetRecipes(ctx context.Context, username string) ([]*model.Recipe, error) {
-	rows, err := p.db.Query(ctx, "select id, recipe_name from recipes where username = $1", username)
+func (p *Persistance) GetRecipes(ctx context.Context, userID string) ([]*model.Recipe, error) {
+	q := `
+		select r.id, r.recipe_name from recipes r join recipe_roles rr on rr.recipe_id = r.id where rr.user_id = $1;
+	`
+	rows, err := p.db.Query(ctx, q, userID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			log.Debug().Err(err).Msg("no rows")
@@ -77,12 +88,12 @@ func (p *Persistance) CreateUser(ctx context.Context, input authservice.SignupIn
 	return &m, nil
 }
 
-func (p *Persistance) FindUser(ctx context.Context, username string) (*authservice.User, error) {
+func (p *Persistance) FindUser(ctx context.Context, userID string) (*authservice.User, error) {
 	var m authservice.User
-	err := p.db.QueryRow(ctx, "select id, username, password, email from users where username = $1", username).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
+	err := p.db.QueryRow(ctx, "select id, username, password, email from users where id = $1", userID).Scan(&m.ID, &m.Username, &m.Password, &m.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			log.Debug().Msgf("couldn't find user with username %s", username)
+			log.Debug().Msgf("couldn't find user with id %s", userID)
 		} else {
 			log.Error().Err(err).Msg("error when finding user")
 		}

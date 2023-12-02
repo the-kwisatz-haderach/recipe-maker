@@ -3,10 +3,17 @@
 package model
 
 type Recipe struct {
-	ID         int    `json:"id"`
+	ID         string `json:"id"`
 	RecipeName string `json:"recipe_name"`
 }
 
 type RecipeInput struct {
 	RecipeName string `json:"recipe_name"`
+}
+
+type RecipeRole struct {
+	ID       string `json:"id"`
+	RecipeID string `json:"recipe_id"`
+	UserID   string `json:"user_id"`
+	Relation string `json:"relation"`
 }

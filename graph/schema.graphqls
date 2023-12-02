@@ -3,13 +3,20 @@
 # https://gqlgen.com/getting-started/
 
 type Recipe {
-  id: Int!
+  id: ID!
   recipe_name: String!
+}
+
+type RecipeRole {
+  id: ID!
+  recipe_id: ID!
+  user_id: ID!
+  relation: String!
 }
 
 type Query {
   recipes: [Recipe!]!
-  recipe(id: Int!): Recipe
+  recipe(id: ID!): Recipe
 }
 
 input RecipeInput {

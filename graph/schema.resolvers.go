@@ -15,7 +15,11 @@ import (
 
 // CreateRecipe is the resolver for the createRecipe field.
 func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error) {
-	return r.Db.CreateRecipe(ctx, input.RecipeName)
+	if user := authservice.GetUser(ctx); user == nil {
+		return nil, errors.New("access denied")
+	} else {
+		return r.Db.CreateRecipe(ctx, input.RecipeName, user.ID)
+	}
 }
 
 // Recipes is the resolver for the recipes field.
@@ -23,12 +27,12 @@ func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
 	if user := authservice.GetUser(ctx); user == nil {
 		return nil, errors.New("access denied")
 	} else {
-		return r.Db.GetRecipes(ctx, user.Username)
+		return r.Db.GetRecipes(ctx, user.ID)
 	}
 }
 
 // Recipe is the resolver for the recipe field.
-func (r *queryResolver) Recipe(ctx context.Context, id int) (*model.Recipe, error) {
+func (r *queryResolver) Recipe(ctx context.Context, id string) (*model.Recipe, error) {
 	panic(fmt.Errorf("not implemented: Recipe - recipe"))
 }
 

@@ -24,19 +24,19 @@ type AuthService struct {
 }
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	ID       string `json:"id"`
-	Email    string `json:"email"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 type LoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type SignupInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
