@@ -4,6 +4,11 @@ db-migrate:
 	--config migrations/tern.conf \
 	--migrations migrations
 
+db-migrate-rerun-latest: 
+	~/go/bin/tern migrate --destination -+1 \
+	--config migrations/tern.conf \
+	--migrations migrations
+
 db-create-migration: 
 	~/go/bin/tern new $(name) \
 	--config migrations/tern.conf \
