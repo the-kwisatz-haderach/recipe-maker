@@ -2,12 +2,21 @@
 
 package model
 
-type Ingredient struct {
-	ID   string `json:"id"`
+type AddIngredientInput struct {
 	Name string `json:"name"`
 }
 
-type IngredientInput struct {
+type AddPantryItemInput struct {
+	IngredientID string `json:"ingredientId"`
+	Quantity     *int   `json:"quantity,omitempty"`
+}
+
+type AddRecipeInput struct {
+	Name string `json:"name"`
+}
+
+type Ingredient struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -23,18 +32,19 @@ type Recipe struct {
 	Name string `json:"name"`
 }
 
-type RecipeInput struct {
-	Name string `json:"name"`
-}
-
 type RecipeRole struct {
 	ID       string `json:"id"`
-	RecipeID string `json:"recipe_id"`
-	UserID   string `json:"user_id"`
+	RecipeID string `json:"recipeId"`
+	UserID   string `json:"userId"`
 	Relation string `json:"relation"`
 }
 
-type UpdatePantryInput struct {
-	IngredientID string `json:"ingredient_id"`
-	Quantity     *int   `json:"quantity,omitempty"`
+type UpdatePantryItemInput struct {
+	ID       string `json:"id"`
+	Quantity *int   `json:"quantity,omitempty"`
+}
+
+type UpdateRecipeInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

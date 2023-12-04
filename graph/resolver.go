@@ -11,8 +11,16 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Persistance interface {
-	CreateRecipe(ctx context.Context, recipeName string, userID string) (*model.Recipe, error)
-	GetRecipes(ctx context.Context, username string) ([]*model.Recipe, error)
+	AddRecipe(ctx context.Context, input model.AddRecipeInput, userID string) (*model.Recipe, error)
+	UpdateRecipe(ctx context.Context, input model.UpdateRecipeInput) (*model.Recipe, error)
+	GetRecipes(ctx context.Context, userID string) ([]*model.Recipe, error)
+	GetRecipe(ctx context.Context, recipeID string) (*model.Recipe, error)
+	GetIngredients(ctx context.Context, userID string) ([]*model.Ingredient, error)
+	GetIngredient(ctx context.Context, ingredientID string) (*model.Ingredient, error)
+	AddIngredient(ctx context.Context, input model.AddIngredientInput, userID string) (*model.Ingredient, error)
+	AddPantryItem(ctx context.Context, input model.AddPantryItemInput, userID string) (*model.PantryItem, error)
+	GetPantryItems(ctx context.Context, userID string) ([]*model.PantryItem, error)
+	UpdatePantryItem(ctx context.Context, input model.UpdatePantryItemInput) (*model.PantryItem, error)
 }
 
 type Resolver struct {

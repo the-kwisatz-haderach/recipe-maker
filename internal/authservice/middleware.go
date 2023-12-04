@@ -34,7 +34,7 @@ func (as *AuthService) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := as.Db.FindUser(ctx, id)
+		user, err := as.Db.FindUser(ctx, id, "")
 		if err != nil {
 			http.Error(w, `{"error":"invalid claims"}`, http.StatusUnauthorized)
 			return

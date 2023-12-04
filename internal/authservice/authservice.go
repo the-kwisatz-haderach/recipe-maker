@@ -36,7 +36,7 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, _ := as.Db.FindUser(ctx, input.Username)
+	u, _ := as.Db.FindUser(ctx, "", input.Username)
 	if u == nil {
 		http.Error(w, "invalid login credentials", http.StatusUnauthorized)
 		return
@@ -80,9 +80,9 @@ func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, _ := as.Db.FindUser(ctx, input.Username)
+	u, _ := as.Db.FindUser(ctx, "", input.Username)
 	if u != nil {
-		http.Error(w, "user already exists", http.StatusBadRequest)
+		http.Error(w, "user already exists", http.StatusConflict)
 		return
 	}
 	encryptedPass, err := as.Auth.HashPassword(ctx, input.Password)

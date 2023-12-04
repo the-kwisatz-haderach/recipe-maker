@@ -9,10 +9,10 @@ CREATE TABLE
 
 CREATE TABLE
   recipe_user (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
     recipe_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    relation VARCHAR(255) DEFAULT 'viewer' NOT NULL
+    relation VARCHAR(255) DEFAULT 'viewer' NOT NULL,
+    PRIMARY KEY (recipe_id, user_id)
   );
 
 CREATE TABLE

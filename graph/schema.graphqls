@@ -1,7 +1,3 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
 type Recipe {
   id: ID!
   name: String!
@@ -9,8 +5,8 @@ type Recipe {
 
 type RecipeRole {
   id: ID!
-  recipe_id: ID!
-  user_id: ID!
+  recipeId: ID!
+  userId: ID!
   relation: String!
 }
 
@@ -35,21 +31,33 @@ type Query {
   pantryItem(id: ID!): PantryItem!
 }
 
-input RecipeInput {
+input AddRecipeInput {
   name: String!
 }
 
-input IngredientInput {
+input UpdateRecipeInput {
+  id: ID!
   name: String!
 }
 
-input UpdatePantryInput {
-  ingredient_id: ID!
+input AddIngredientInput {
+  name: String!
+}
+
+input AddPantryItemInput {
+  ingredientId: ID!
+  quantity: Int
+}
+
+input UpdatePantryItemInput {
+  id: ID!
   quantity: Int
 }
 
 type Mutation {
-  saveRecipe(input: RecipeInput!): Recipe!
-  createIngredient(input: IngredientInput!): Ingredient!
-  updatePantry(input: UpdatePantryInput!): PantryItem!
+  addRecipe(input: AddRecipeInput!): Recipe!
+  updateRecipe(input: UpdateRecipeInput!): Recipe!
+  addIngredient(input: AddIngredientInput!): Ingredient!
+  addPantryItem(input: AddPantryItemInput!): PantryItem!
+  updatePantryItem(input: UpdatePantryItemInput!): PantryItem!
 }

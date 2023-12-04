@@ -7,7 +7,7 @@ import (
 )
 
 type userStorage interface {
-	FindUser(ctx context.Context, username string) (*User, error)
+	FindUser(ctx context.Context, userID, username string) (*User, error)
 	CreateUser(ctx context.Context, input SignupInput) (*User, error)
 }
 

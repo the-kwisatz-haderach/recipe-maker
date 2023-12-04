@@ -51,9 +51,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateIngredient func(childComplexity int, input model.IngredientInput) int
-		SaveRecipe       func(childComplexity int, input model.RecipeInput) int
-		UpdatePantry     func(childComplexity int, input model.UpdatePantryInput) int
+		AddIngredient    func(childComplexity int, input model.AddIngredientInput) int
+		AddPantryItem    func(childComplexity int, input model.AddPantryItemInput) int
+		AddRecipe        func(childComplexity int, input model.AddRecipeInput) int
+		UpdatePantryItem func(childComplexity int, input model.UpdatePantryItemInput) int
+		UpdateRecipe     func(childComplexity int, input model.UpdateRecipeInput) int
 	}
 
 	PantryItem struct {
@@ -86,9 +88,11 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	SaveRecipe(ctx context.Context, input model.RecipeInput) (*model.Recipe, error)
-	CreateIngredient(ctx context.Context, input model.IngredientInput) (*model.Ingredient, error)
-	UpdatePantry(ctx context.Context, input model.UpdatePantryInput) (*model.PantryItem, error)
+	AddRecipe(ctx context.Context, input model.AddRecipeInput) (*model.Recipe, error)
+	UpdateRecipe(ctx context.Context, input model.UpdateRecipeInput) (*model.Recipe, error)
+	AddIngredient(ctx context.Context, input model.AddIngredientInput) (*model.Ingredient, error)
+	AddPantryItem(ctx context.Context, input model.AddPantryItemInput) (*model.PantryItem, error)
+	UpdatePantryItem(ctx context.Context, input model.UpdatePantryItemInput) (*model.PantryItem, error)
 }
 type QueryResolver interface {
 	Recipes(ctx context.Context) ([]*model.Recipe, error)
@@ -128,41 +132,65 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Ingredient.Name(childComplexity), true
 
-	case "Mutation.createIngredient":
-		if e.complexity.Mutation.CreateIngredient == nil {
+	case "Mutation.addIngredient":
+		if e.complexity.Mutation.AddIngredient == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createIngredient_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addIngredient_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateIngredient(childComplexity, args["input"].(model.IngredientInput)), true
+		return e.complexity.Mutation.AddIngredient(childComplexity, args["input"].(model.AddIngredientInput)), true
 
-	case "Mutation.saveRecipe":
-		if e.complexity.Mutation.SaveRecipe == nil {
+	case "Mutation.addPantryItem":
+		if e.complexity.Mutation.AddPantryItem == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_saveRecipe_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addPantryItem_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SaveRecipe(childComplexity, args["input"].(model.RecipeInput)), true
+		return e.complexity.Mutation.AddPantryItem(childComplexity, args["input"].(model.AddPantryItemInput)), true
 
-	case "Mutation.updatePantry":
-		if e.complexity.Mutation.UpdatePantry == nil {
+	case "Mutation.addRecipe":
+		if e.complexity.Mutation.AddRecipe == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updatePantry_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addRecipe_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdatePantry(childComplexity, args["input"].(model.UpdatePantryInput)), true
+		return e.complexity.Mutation.AddRecipe(childComplexity, args["input"].(model.AddRecipeInput)), true
+
+	case "Mutation.updatePantryItem":
+		if e.complexity.Mutation.UpdatePantryItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePantryItem_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePantryItem(childComplexity, args["input"].(model.UpdatePantryItemInput)), true
+
+	case "Mutation.updateRecipe":
+		if e.complexity.Mutation.UpdateRecipe == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRecipe_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRecipe(childComplexity, args["input"].(model.UpdateRecipeInput)), true
 
 	case "PantryItem.id":
 		if e.complexity.PantryItem.ID == nil {
@@ -270,7 +298,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RecipeRole.ID(childComplexity), true
 
-	case "RecipeRole.recipe_id":
+	case "RecipeRole.recipeId":
 		if e.complexity.RecipeRole.RecipeID == nil {
 			break
 		}
@@ -284,7 +312,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RecipeRole.Relation(childComplexity), true
 
-	case "RecipeRole.user_id":
+	case "RecipeRole.userId":
 		if e.complexity.RecipeRole.UserID == nil {
 			break
 		}
@@ -299,9 +327,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputIngredientInput,
-		ec.unmarshalInputRecipeInput,
-		ec.unmarshalInputUpdatePantryInput,
+		ec.unmarshalInputAddIngredientInput,
+		ec.unmarshalInputAddPantryItemInput,
+		ec.unmarshalInputAddRecipeInput,
+		ec.unmarshalInputUpdatePantryItemInput,
+		ec.unmarshalInputUpdateRecipeInput,
 	)
 	first := true
 
@@ -418,13 +448,13 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createIngredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_addIngredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.IngredientInput
+	var arg0 model.AddIngredientInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientInput(ctx, tmp)
+		arg0, err = ec.unmarshalNAddIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddIngredientInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -433,13 +463,13 @@ func (ec *executionContext) field_Mutation_createIngredient_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_saveRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_addPantryItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.RecipeInput
+	var arg0 model.AddPantryItemInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipeInput(ctx, tmp)
+		arg0, err = ec.unmarshalNAddPantryItemInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddPantryItemInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -448,13 +478,43 @@ func (ec *executionContext) field_Mutation_saveRecipe_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updatePantry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_addRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdatePantryInput
+	var arg0 model.AddRecipeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdatePantryInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryInput(ctx, tmp)
+		arg0, err = ec.unmarshalNAddRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddRecipeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePantryItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdatePantryItemInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdatePantryItemInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryItemInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateRecipeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdateRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdateRecipeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -649,8 +709,8 @@ func (ec *executionContext) fieldContext_Ingredient_name(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_saveRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_saveRecipe(ctx, field)
+func (ec *executionContext) _Mutation_addRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addRecipe(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -663,7 +723,7 @@ func (ec *executionContext) _Mutation_saveRecipe(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SaveRecipe(rctx, fc.Args["input"].(model.RecipeInput))
+		return ec.resolvers.Mutation().AddRecipe(rctx, fc.Args["input"].(model.AddRecipeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -680,7 +740,7 @@ func (ec *executionContext) _Mutation_saveRecipe(ctx context.Context, field grap
 	return ec.marshalNRecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_saveRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -703,15 +763,15 @@ func (ec *executionContext) fieldContext_Mutation_saveRecipe(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_saveRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_addRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createIngredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createIngredient(ctx, field)
+func (ec *executionContext) _Mutation_updateRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateRecipe(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -724,7 +784,68 @@ func (ec *executionContext) _Mutation_createIngredient(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateIngredient(rctx, fc.Args["input"].(model.IngredientInput))
+		return ec.resolvers.Mutation().UpdateRecipe(rctx, fc.Args["input"].(model.UpdateRecipeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Recipe)
+	fc.Result = res
+	return ec.marshalNRecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Recipe_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Recipe_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Recipe", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addIngredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addIngredient(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddIngredient(rctx, fc.Args["input"].(model.AddIngredientInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -741,7 +862,7 @@ func (ec *executionContext) _Mutation_createIngredient(ctx context.Context, fiel
 	return ec.marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredient(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createIngredient(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addIngredient(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -764,15 +885,15 @@ func (ec *executionContext) fieldContext_Mutation_createIngredient(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createIngredient_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_addIngredient_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updatePantry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updatePantry(ctx, field)
+func (ec *executionContext) _Mutation_addPantryItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addPantryItem(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -785,7 +906,7 @@ func (ec *executionContext) _Mutation_updatePantry(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePantry(rctx, fc.Args["input"].(model.UpdatePantryInput))
+		return ec.resolvers.Mutation().AddPantryItem(rctx, fc.Args["input"].(model.AddPantryItemInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -802,7 +923,7 @@ func (ec *executionContext) _Mutation_updatePantry(ctx context.Context, field gr
 	return ec.marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updatePantry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addPantryItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -829,7 +950,72 @@ func (ec *executionContext) fieldContext_Mutation_updatePantry(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updatePantry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_addPantryItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePantryItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updatePantryItem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePantryItem(rctx, fc.Args["input"].(model.UpdatePantryItemInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PantryItem)
+	fc.Result = res
+	return ec.marshalNPantryItem2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐPantryItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePantryItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PantryItem_id(ctx, field)
+			case "name":
+				return ec.fieldContext_PantryItem_name(ctx, field)
+			case "quantity":
+				return ec.fieldContext_PantryItem_quantity(ctx, field)
+			case "unit":
+				return ec.fieldContext_PantryItem_unit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PantryItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePantryItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1614,8 +1800,8 @@ func (ec *executionContext) fieldContext_RecipeRole_id(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _RecipeRole_recipe_id(ctx context.Context, field graphql.CollectedField, obj *model.RecipeRole) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RecipeRole_recipe_id(ctx, field)
+func (ec *executionContext) _RecipeRole_recipeId(ctx context.Context, field graphql.CollectedField, obj *model.RecipeRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RecipeRole_recipeId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1645,7 +1831,7 @@ func (ec *executionContext) _RecipeRole_recipe_id(ctx context.Context, field gra
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_RecipeRole_recipe_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecipeRole_recipeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RecipeRole",
 		Field:      field,
@@ -1658,8 +1844,8 @@ func (ec *executionContext) fieldContext_RecipeRole_recipe_id(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _RecipeRole_user_id(ctx context.Context, field graphql.CollectedField, obj *model.RecipeRole) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RecipeRole_user_id(ctx, field)
+func (ec *executionContext) _RecipeRole_userId(ctx context.Context, field graphql.CollectedField, obj *model.RecipeRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RecipeRole_userId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1689,7 +1875,7 @@ func (ec *executionContext) _RecipeRole_user_id(ctx context.Context, field graph
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_RecipeRole_user_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecipeRole_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RecipeRole",
 		Field:      field,
@@ -3519,8 +3705,8 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputIngredientInput(ctx context.Context, obj interface{}) (model.IngredientInput, error) {
-	var it model.IngredientInput
+func (ec *executionContext) unmarshalInputAddIngredientInput(ctx context.Context, obj interface{}) (model.AddIngredientInput, error) {
+	var it model.AddIngredientInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3548,53 +3734,24 @@ func (ec *executionContext) unmarshalInputIngredientInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputRecipeInput(ctx context.Context, obj interface{}) (model.RecipeInput, error) {
-	var it model.RecipeInput
+func (ec *executionContext) unmarshalInputAddPantryItemInput(ctx context.Context, obj interface{}) (model.AddPantryItemInput, error) {
+	var it model.AddPantryItemInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"ingredientId", "quantity"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
+		case "ingredientId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdatePantryInput(ctx context.Context, obj interface{}) (model.UpdatePantryInput, error) {
-	var it model.UpdatePantryInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"ingredient_id", "quantity"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "ingredient_id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ingredient_id"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ingredientId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
@@ -3609,6 +3766,111 @@ func (ec *executionContext) unmarshalInputUpdatePantryInput(ctx context.Context,
 				return it, err
 			}
 			it.Quantity = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAddRecipeInput(ctx context.Context, obj interface{}) (model.AddRecipeInput, error) {
+	var it model.AddRecipeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePantryItemInput(ctx context.Context, obj interface{}) (model.UpdatePantryItemInput, error) {
+	var it model.UpdatePantryItemInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "quantity"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Quantity = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateRecipeInput(ctx context.Context, obj interface{}) (model.UpdateRecipeInput, error) {
+	var it model.UpdateRecipeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		}
 	}
 
@@ -3686,23 +3948,37 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "saveRecipe":
+		case "addRecipe":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_saveRecipe(ctx, field)
+				return ec._Mutation_addRecipe(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createIngredient":
+		case "updateRecipe":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createIngredient(ctx, field)
+				return ec._Mutation_updateRecipe(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updatePantry":
+		case "addIngredient":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updatePantry(ctx, field)
+				return ec._Mutation_addIngredient(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addPantryItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addPantryItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatePantryItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePantryItem(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4026,13 +4302,13 @@ func (ec *executionContext) _RecipeRole(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "recipe_id":
-			out.Values[i] = ec._RecipeRole_recipe_id(ctx, field, obj)
+		case "recipeId":
+			out.Values[i] = ec._RecipeRole_recipeId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "user_id":
-			out.Values[i] = ec._RecipeRole_user_id(ctx, field, obj)
+		case "userId":
+			out.Values[i] = ec._RecipeRole_userId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4390,6 +4666,21 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAddIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddIngredientInput(ctx context.Context, v interface{}) (model.AddIngredientInput, error) {
+	res, err := ec.unmarshalInputAddIngredientInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAddPantryItemInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddPantryItemInput(ctx context.Context, v interface{}) (model.AddPantryItemInput, error) {
+	res, err := ec.unmarshalInputAddPantryItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAddRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐAddRecipeInput(ctx context.Context, v interface{}) (model.AddRecipeInput, error) {
+	res, err := ec.unmarshalInputAddRecipeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4476,11 +4767,6 @@ func (ec *executionContext) marshalNIngredient2ᚖgithubᚗcomᚋtheᚑkwisatz�
 		return graphql.Null
 	}
 	return ec._Ingredient(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNIngredientInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐIngredientInput(ctx context.Context, v interface{}) (model.IngredientInput, error) {
-	res, err := ec.unmarshalInputIngredientInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
@@ -4614,11 +4900,6 @@ func (ec *executionContext) marshalNRecipe2ᚖgithubᚗcomᚋtheᚑkwisatzᚑhad
 	return ec._Recipe(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐRecipeInput(ctx context.Context, v interface{}) (model.RecipeInput, error) {
-	res, err := ec.unmarshalInputRecipeInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4634,8 +4915,13 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNUpdatePantryInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryInput(ctx context.Context, v interface{}) (model.UpdatePantryInput, error) {
-	res, err := ec.unmarshalInputUpdatePantryInput(ctx, v)
+func (ec *executionContext) unmarshalNUpdatePantryItemInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdatePantryItemInput(ctx context.Context, v interface{}) (model.UpdatePantryItemInput, error) {
+	res, err := ec.unmarshalInputUpdatePantryItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateRecipeInput2githubᚗcomᚋtheᚑkwisatzᚑhaderachᚋrecipemakerᚋgraphᚋmodelᚐUpdateRecipeInput(ctx context.Context, v interface{}) (model.UpdateRecipeInput, error) {
+	res, err := ec.unmarshalInputUpdateRecipeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
