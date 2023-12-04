@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/the-kwisatz-haderach/recipemaker/graph/model"
 	"github.com/the-kwisatz-haderach/recipemaker/internal/authservice"
@@ -69,7 +68,11 @@ func (r *queryResolver) Recipes(ctx context.Context) ([]*model.Recipe, error) {
 
 // Recipe is the resolver for the recipe field.
 func (r *queryResolver) Recipe(ctx context.Context, id string) (*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: Recipe - recipe"))
+	if user := authservice.GetUser(ctx); user == nil {
+		return nil, errors.New("access denied")
+	} else {
+		return r.Db.GetRecipe(ctx, id)
+	}
 }
 
 // Ingredients is the resolver for the ingredients field.
@@ -101,7 +104,11 @@ func (r *queryResolver) PantryItems(ctx context.Context) ([]*model.PantryItem, e
 
 // PantryItem is the resolver for the pantryItem field.
 func (r *queryResolver) PantryItem(ctx context.Context, id string) (*model.PantryItem, error) {
-	panic(fmt.Errorf("not implemented: PantryItem - pantryItem"))
+	if user := authservice.GetUser(ctx); user == nil {
+		return nil, errors.New("access denied")
+	} else {
+		return r.Db.GetPantryItem(ctx, id)
+	}
 }
 
 // Mutation returns MutationResolver implementation.

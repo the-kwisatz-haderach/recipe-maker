@@ -20,6 +20,7 @@ type Persistance interface {
 	AddIngredient(ctx context.Context, input model.AddIngredientInput, userID string) (*model.Ingredient, error)
 	AddPantryItem(ctx context.Context, input model.AddPantryItemInput, userID string) (*model.PantryItem, error)
 	GetPantryItems(ctx context.Context, userID string) ([]*model.PantryItem, error)
+	GetPantryItem(ctx context.Context, itemID string) (*model.PantryItem, error)
 	UpdatePantryItem(ctx context.Context, input model.UpdatePantryItemInput) (*model.PantryItem, error)
 }
 

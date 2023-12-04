@@ -84,3 +84,22 @@ func (p *Persistance) GetPantryItems(ctx context.Context, userID string) ([]*mod
 
 	return pantryItems, nil
 }
+
+func (p *Persistance) GetPantryItem(ctx context.Context, itemID string) (*model.PantryItem, error) {
+	var pantryItem model.PantryItem
+	q := `
+		SELECT pi.id, i.name, pi.quantity, pi.unit FROM pantry_item
+		INNER JOIN ingredient i ON i.id = pi.ingredient_id
+		WHERE pi.id = $1;
+	`
+	err := p.db.QueryRow(ctx, q, itemID).Scan(&pantryItem.ID, &pantryItem.Name, &pantryItem.Quantity, &pantryItem.Unit)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			log.Debug().Err(err).Msg("no rows")
+		} else {
+			log.Error().Err(err).Msg("unknown error while getting pantry item")
+		}
+		return nil, err
+	}
+	return &pantryItem, nil
+}
