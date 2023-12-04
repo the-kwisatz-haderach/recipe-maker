@@ -1,10 +1,24 @@
 services:
+  recipe-maker:
+    build: .
+    image: recipe-maker:latest
+    ports:
+      - 8080:8080
+    expose:
+      - 8080
+    profiles: ['full']
+    environment:
+      - PORT=8080
+      - DATABASE_URL=${DATABASE_URL}
+      - VALIDATE_JWT=false
+      - JWT_SIGNING_SECRET=${JWT_SIGNING_SECRET}
+    restart: always
   postgres:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 5432:5432
     expose:
@@ -13,7 +27,7 @@ services:
     image: dpage/pgadmin4:latest
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@test.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - 80:80
