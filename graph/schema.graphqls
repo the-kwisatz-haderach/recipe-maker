@@ -1,3 +1,5 @@
+directive @auth on FIELD_DEFINITION
+
 type Recipe {
   id: ID!
   name: String!
@@ -23,12 +25,12 @@ type PantryItem {
 }
 
 type Query {
-  recipes: [Recipe!]!
-  recipe(id: ID!): Recipe!
-  ingredients: [Ingredient!]!
-  ingredient(id: ID!): Ingredient!
-  pantryItems: [PantryItem!]!
-  pantryItem(id: ID!): PantryItem!
+  recipes: [Recipe!]! @auth
+  recipe(id: ID!): Recipe! @auth
+  ingredients: [Ingredient!]! @auth
+  ingredient(id: ID!): Ingredient! @auth
+  pantryItems: [PantryItem!]! @auth
+  pantryItem(id: ID!): PantryItem! @auth
 }
 
 input AddRecipeInput {
@@ -55,9 +57,9 @@ input UpdatePantryItemInput {
 }
 
 type Mutation {
-  addRecipe(input: AddRecipeInput!): Recipe!
-  updateRecipe(input: UpdateRecipeInput!): Recipe!
-  addIngredient(input: AddIngredientInput!): Ingredient!
-  addPantryItem(input: AddPantryItemInput!): PantryItem!
-  updatePantryItem(input: UpdatePantryItemInput!): PantryItem!
+  addRecipe(input: AddRecipeInput!): Recipe! @auth
+  updateRecipe(input: UpdateRecipeInput!): Recipe! @auth
+  addIngredient(input: AddIngredientInput!): Ingredient! @auth
+  addPantryItem(input: AddPantryItemInput!): PantryItem! @auth
+  updatePantryItem(input: UpdatePantryItemInput!): PantryItem! @auth
 }
