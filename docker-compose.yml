@@ -6,12 +6,19 @@ services:
       - 8080:8080
     expose:
       - 8080
-    profiles: ['full']
+    profiles: ['full', 'backend']
     environment:
       - PORT=8080
       - DATABASE_URL=postgres://admin:admin@postgres:5432/admin
       - VALIDATE_JWT=false
       - JWT_SIGNING_SECRET=${JWT_SIGNING_SECRET}
+    restart: always
+  recipe-maker-frontend:
+    build: ../recipe-maker-ui
+    image: recipe-maker-frontend:latest
+    ports:
+      - 3000:3000
+    profiles: ['full', 'frontend']
     restart: always
   postgres:
     image: postgres:16
