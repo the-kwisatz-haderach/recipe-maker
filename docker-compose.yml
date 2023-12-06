@@ -1,5 +1,6 @@
 services:
-  recipe-maker:
+  recipe-maker-api:
+    container_name: recipe-maker-api
     build: .
     image: recipe-maker:latest
     ports:
@@ -13,28 +14,60 @@ services:
       - VALIDATE_JWT=false
       - JWT_SIGNING_SECRET=${JWT_SIGNING_SECRET}
     restart: always
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
   recipe-maker-frontend:
+    container_name: recipe-maker-frontend
     build: ../recipe-maker-ui
     image: recipe-maker-frontend:latest
     ports:
       - 3000:3000
+    expose:
+      - 3000
     profiles: ['full', 'frontend']
     restart: always
+    depends_on:
+      - recipe-maker-api
   postgres:
+    container_name: postgres
     image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
     ports:
       - 5432:5432
     expose:
       - 5432
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  db-migration:
+    container_name: db-migration
+    build:
+      context: .
+      dockerfile: Dockerfile.dbmigration
+    image: recipe-maker-dbmigration:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
   pgadmin:
+    container_name: pgadmin
     image: dpage/pgadmin4:latest
     restart: always
+    logging:
+      driver: none
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - 80:80
+    depends_on:
+      postgres:
+        condition: service_healthy

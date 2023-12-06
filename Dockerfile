@@ -20,4 +20,9 @@ COPY --from=build-stage /recipe-maker /recipe-maker
 
 EXPOSE 8080
 
+ENV PORT 8080
+
+# set hostname to localhost
+ENV HOSTNAME "0.0.0.0"
+
 CMD ["/recipe-maker"]
