@@ -29,8 +29,6 @@ services:
       - 3000
     profiles: ['full', 'frontend']
     restart: always
-    depends_on:
-      - recipe-maker-api
   postgres:
     container_name: postgres
     image: postgres:16
@@ -52,11 +50,12 @@ services:
     container_name: db-migration
     build:
       context: .
-      dockerfile: Dockerfile.dbmigration
+      dockerfile: ./migrations/Dockerfile
     image: recipe-maker-dbmigration:latest
     depends_on:
       postgres:
         condition: service_healthy
+    profiles: ['full', 'migration']
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
@@ -71,3 +70,4 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    profiles: ['full', 'pgadmin']
