@@ -13,6 +13,7 @@ type Configuration struct {
 	DATABASE_URL       string
 	VALIDATE_JWT       bool
 	JWT_SIGNING_SECRET string
+	DEBUG_LOGGING      bool
 }
 
 var Config = &Configuration{
@@ -20,6 +21,7 @@ var Config = &Configuration{
 	DATABASE_URL:       "",
 	VALIDATE_JWT:       true,
 	JWT_SIGNING_SECRET: "",
+	DEBUG_LOGGING:      false,
 }
 
 func InitConfiguration() {
@@ -42,5 +44,8 @@ func InitConfiguration() {
 	}
 	if JWT_SIGNING_SECRET, exists := os.LookupEnv("JWT_SIGNING_SECRET"); exists {
 		Config.JWT_SIGNING_SECRET = JWT_SIGNING_SECRET
+	}
+	if DEBUG_LOGGING, exists := os.LookupEnv("DEBUG_LOGGING"); exists {
+		Config.DEBUG_LOGGING = DEBUG_LOGGING == "true"
 	}
 }

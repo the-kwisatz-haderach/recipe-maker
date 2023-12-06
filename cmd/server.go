@@ -27,6 +27,11 @@ func main() {
 	if *envFlag == "development" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
+	// Default level for this example is info, unless debug flag is present
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if config.Config.DEBUG_LOGGING {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 
 	ctx := context.Background()
 
