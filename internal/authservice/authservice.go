@@ -58,6 +58,7 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		Secure:   true,
 		Expires:  time.Now().Add(time.Hour * 24),
+		Path:     "/",
 	}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
@@ -103,16 +104,15 @@ func (as *AuthService) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	_, err := r.Cookie(cookieName)
-	if err == nil {
-		cookie := http.Cookie{
-			Name:     cookieName,
-			Value:    "",
-			HttpOnly: true,
-			SameSite: http.SameSiteStrictMode,
-			MaxAge:   -1,
-		}
-		http.SetCookie(w, &cookie)
+	cookie := http.Cookie{
+		Name:     cookieName,
+		Value:    "",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		MaxAge:   -1,
+		Path:     "/",
 	}
+	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
 }
