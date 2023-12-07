@@ -12,6 +12,10 @@ resource "aws_s3_bucket_ownership_controls" "recipe_maker" {
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_acl" "recipe_maker" {
