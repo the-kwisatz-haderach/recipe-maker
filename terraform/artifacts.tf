@@ -3,7 +3,7 @@ resource "aws_ecr_repository" "recipe_maker_registry" {
   image_tag_mutability = "MUTABLE"
   force_delete         = true
   tags = {
-    tag-key = "recipe-maker"
+    service = "recipe-maker"
   }
 }
 
@@ -30,7 +30,7 @@ resource "aws_iam_role" "github_actions_role" {
     ]
   })
   tags = {
-    tag-key = "recipe-maker"
+    service = "recipe-maker"
   }
 }
 
@@ -63,7 +63,7 @@ resource "aws_iam_policy" "ecr_access_policy" {
   name   = "ECRAccessPolicy"
   policy = data.aws_iam_policy_document.ecr_policy_document.json
   tags = {
-    tag-key = "recipe-maker"
+    service = "recipe-maker"
   }
 }
 

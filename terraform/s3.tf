@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "recipe_maker_bucket" {
   bucket        = "recipe-maker"
   force_destroy = true
   tags = {
-    tag-key = "recipe-maker"
+    service = "recipe-maker"
   }
 }
 
