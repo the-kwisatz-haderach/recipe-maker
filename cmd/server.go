@@ -27,6 +27,11 @@ func main() {
 	if *envFlag == "development" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
+	// Default level for this example is info, unless debug flag is present
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if config.Config.DEBUG_LOGGING {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 
 	ctx := context.Background()
 
@@ -42,7 +47,9 @@ func main() {
 	router.HandleFunc("/logout", authService.LogoutHandler)
 
 	// GraphQL server
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{Db: db}}))
+	c := graph.Config{Resolvers: &graph.Resolver{Db: db}}
+	c.Directives.Auth = authservice.AuthDirective
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", authService.Middleware(srv))
 

@@ -21,3 +21,10 @@ db-create-migration:
 # https://github.com/99designs/gqlgen
 gql-generate:
 	go run github.com/99designs/gqlgen generate
+
+# Docker artifacts
+build-image:
+	docker build -t 044984945511.dkr.ecr.eu-north-1.amazonaws.com/recipe-maker:latest .
+
+push-image:
+	docker push 044984945511.dkr.ecr.eu-north-1.amazonaws.com/recipe-maker:latest
