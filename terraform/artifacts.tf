@@ -40,15 +40,22 @@ data "aws_iam_policy_document" "ecr_policy_document" {
   statement {
     effect = "Allow"
     actions = [
-      "ecr:CompleteLayerUpload",
-      "ecr:GetAuthorizationToken",
-      "ecr:UploadLayerPart",
-      "ecr:InitiateLayerUpload",
       "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:CompleteLayerUpload",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
       "ecr:PutImage",
+      "ecr:UploadLayerPart"
     ]
     resources = [aws_ecr_repository.recipe_maker_registry.arn]
   }
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
   depends_on = [aws_ecr_repository.recipe_maker_registry]
 }
 
