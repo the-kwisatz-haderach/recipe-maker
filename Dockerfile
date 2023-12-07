@@ -11,7 +11,7 @@ COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /recipe-maker ./cmd/server.go
 
-FROM golang:1.21-alpine
+FROM alpine:latest
 
 RUN addgroup -S nonroot && adduser -S user -G nonroot
 USER user
