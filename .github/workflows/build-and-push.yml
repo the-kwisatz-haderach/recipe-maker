@@ -3,9 +3,9 @@ run-name: ${{ github.actor }} is pushing a new image
 on:
   workflow_dispatch:
 env:
-  AWS_REGION: eu-north-1
-  AWS_ROLE: arn:aws:iam::044984945511:role/github_actions_role
-  AWS_REPOSITORY_URI: 044984945511.dkr.ecr.eu-north-1.amazonaws.com
+  AWS_REGION: 'eu-north-1'
+  AWS_ROLE: 'arn:aws:iam::044984945511:role/github_actions_role'
+  AWS_REPOSITORY_URI: '044984945511.dkr.ecr.eu-north-1.amazonaws.com'
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -15,14 +15,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build artifact
-        run: |
-          docker build -t $AWS_REPOSITORY_URI/recipe-maker:latest .
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
+          disable-retry: true
+      - name: Build artifact
+        run: |
+          docker build -t $AWS_REPOSITORY_URI/recipe-maker:latest .
       - name: Push artifact
         run: |
           docker push $AWS_REPOSITORY_URI/recipe-maker:latest

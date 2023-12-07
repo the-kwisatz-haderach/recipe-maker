@@ -8,33 +8,29 @@ resource "aws_ecr_repository" "recipe_maker_registry" {
 }
 
 resource "aws_iam_role" "github_actions_role" {
-  name               = "github_actions_role"
-  assume_role_policy = data.aws_iam_policy_document.github_actions_assume_role.json
-  depends_on         = [data.aws_iam_policy_document.github_actions_assume_role]
+  name = "github_actions_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::044984945511:oidc-provider/token.actions.githubusercontent.com"
+        }
+        Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:the-kwisatz-haderach/recipe-maker:*",
+          },
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
+          }
+        }
+      },
+    ]
+  })
   tags = {
     tag-key = "recipe-maker"
-  }
-}
-
-data "aws_iam_policy_document" "github_actions_assume_role" {
-  version = "2012-10-17"
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = ["arn:aws:iam::044984945511:oidc-provider/token.actions.githubusercontent.com"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-    condition {
-      test     = "StringLike"
-      variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:the-kwisatz-haderach/recipe-maker:main"]
-    }
   }
 }
 
