@@ -16,11 +16,11 @@ resource "aws_iam_role" "github_actions_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::044984945511:oidc-provider/token.actions.githubusercontent.com"
+          Federated = "arn:aws:iam::${var.aws_account}:oidc-provider/token.actions.githubusercontent.com"
         }
         Condition = {
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:the-kwisatz-haderach/recipe-maker:*",
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_account}/${var.github_repo}:*",
           },
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
