@@ -22,3 +22,8 @@ func ConnectDb(ctx context.Context, conStr string) (*Persistance, func()) {
 type Persistance struct {
 	db *pgxpool.Pool
 }
+
+func (p *Persistance) IsHealthy(ctx context.Context) bool {
+	err := p.db.Ping(ctx)
+	return err == nil
+}

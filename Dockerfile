@@ -25,4 +25,7 @@ ENV PORT 8080
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:8080/health || exit 1
+
 CMD ["/recipe-maker"]

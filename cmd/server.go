@@ -41,6 +41,15 @@ func main() {
 	authService := authservice.NewAuthService(db)
 	router := http.NewServeMux()
 
+	// Healthcheck
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if db.IsHealthy(ctx) {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(500)
+		}
+	})
+
 	// Authentication service
 	router.HandleFunc("/login", authService.LoginHandler)
 	router.HandleFunc("/signup", authService.SignupHandler)
