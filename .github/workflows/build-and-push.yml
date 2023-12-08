@@ -1,4 +1,4 @@
-name: Build & Push
+name: '📦 Build & Push'
 run-name: ${{ github.actor }} is pushing a new image
 on:
   workflow_dispatch:
