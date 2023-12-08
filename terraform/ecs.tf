@@ -1,5 +1,17 @@
 resource "aws_ecs_cluster" "recipe_maker" {
   name = "recipe-maker"
+
+  configuration {
+    execute_command_configuration {
+      logging = "OVERRIDE"
+
+      log_configuration {
+        cloud_watch_log_group_name = aws_cloudwatch_log_group.recipe_maker_log_group.name
+      }
+    }
+  }
+
+  depends_on = [aws_cloudwatch_log_group.recipe_maker_log_group]
 }
 
 resource "aws_ecs_cluster_capacity_providers" "recipe_maker" {
@@ -65,56 +77,38 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
-resource "aws_lb" "recipe_maker_lb" {
-  name               = "recipe-maker-lb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_security_group.id]
-  subnets = [
-    aws_subnet.main_subnet_1.id,
-    aws_subnet.main_subnet_2.id,
-    aws_subnet.main_subnet_3.id,
-  ]
+data "aws_iam_policy_document" "ecs_execution_policy_document" {
+  version = "2012-10-17"
 
-  enable_deletion_protection = false
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["*"]
+  }
+}
 
-  depends_on = [
-    aws_security_group.alb_security_group,
-    aws_subnet.main_subnet_1,
-    aws_subnet.main_subnet_2,
-    aws_subnet.main_subnet_3,
-  ]
+
+resource "aws_iam_policy" "ecs_execution_policy" {
+  name   = "ECSExecutionPolicy"
+  policy = data.aws_iam_policy_document.ecs_execution_policy_document.json
   tags = {
     service = "recipe-maker"
   }
 }
 
-resource "aws_lb_target_group" "recipe_maker_lb_target_group" {
-  name        = "recipe-maker-lb"
-  target_type = "ip"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  depends_on  = [aws_vpc.main]
-  tags = {
-    service = "recipe-maker"
-  }
+resource "aws_iam_role_policy_attachment" "ecs_execution_policy_attachment" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_execution_policy.arn
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.recipe_maker_lb.arn
-  port              = "80"
-  protocol          = "HTTP"
 
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.recipe_maker_lb_target_group.arn
-  }
-  depends_on = [aws_lb_target_group.recipe_maker_lb_target_group]
-  tags = {
-    service = "recipe-maker"
-  }
-}
 
 resource "aws_ecs_service" "recipe_maker_api" {
   name            = "recipe-maker-api"
@@ -122,6 +116,7 @@ resource "aws_ecs_service" "recipe_maker_api" {
   task_definition = aws_ecs_task_definition.recipe_maker.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
   network_configuration {
     subnets = [
       aws_subnet.main_subnet_1.id,
