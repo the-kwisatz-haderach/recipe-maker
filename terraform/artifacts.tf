@@ -71,3 +71,25 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecr_policy_attachment"
   role       = aws_iam_role.github_actions_role.name
   policy_arn = aws_iam_policy.ecr_access_policy.arn
 }
+
+resource "aws_ecr_lifecycle_policy" "remove_untagged" {
+  repository = aws_ecr_repository.recipe_maker_registry.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1,
+        description  = "Expire images older than 7 days",
+        selection = {
+          tagStatus   = "untagged",
+          countType   = "sinceImagePushed",
+          countUnit   = "days",
+          countNumber = 7
+        },
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
