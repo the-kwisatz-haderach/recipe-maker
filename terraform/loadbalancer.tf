@@ -4,18 +4,18 @@ resource "aws_lb" "recipe_maker_lb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_security_group.id]
   subnets = [
-    aws_subnet.main_subnet_1.id,
-    aws_subnet.main_subnet_2.id,
-    aws_subnet.main_subnet_3.id,
+    aws_subnet.public_subnet_1.id,
+    aws_subnet.public_subnet_2.id,
+    aws_subnet.public_subnet_3.id,
   ]
 
   enable_deletion_protection = false
 
   depends_on = [
     aws_security_group.alb_security_group,
-    aws_subnet.main_subnet_1,
-    aws_subnet.main_subnet_2,
-    aws_subnet.main_subnet_3,
+    aws_subnet.public_subnet_1,
+    aws_subnet.public_subnet_2,
+    aws_subnet.public_subnet_3,
   ]
   tags = {
     service = "recipe-maker"
