@@ -15,8 +15,7 @@ resource "aws_ecs_cluster" "recipe_maker" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "recipe_maker" {
-  cluster_name = aws_ecs_cluster.recipe_maker.name
-
+  cluster_name       = aws_ecs_cluster.recipe_maker.name
   capacity_providers = ["FARGATE"]
 
   default_capacity_provider_strategy {
@@ -34,19 +33,42 @@ resource "aws_ecs_task_definition" "recipe_maker" {
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-
   container_definitions = jsonencode([
     {
       name      = "recipe-maker-api"
-      image     = "${var.aws_account}.dkr.ecr.eu-north-1.amazonaws.com/recipe-maker:latest"
+      image     = "${aws_ecr_repository.recipe_maker_registry.repository_url}:latest"
       cpu       = 256
       memory    = 512
       essential = true
+      healthCheck = {
+        command  = ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+        interval = 30
+        timeout  = 5
+        retries  = 3
+      }
       portMappings = [
         {
           containerPort = 8080
           hostPort      = 8080
         }
+      ]
+      environment = [
+        {
+          name  = "DEBUG_LOGGING"
+          value = "true"
+        },
+        {
+          name  = "VALIDATE_JWT"
+          value = "false"
+        },
+        {
+          name  = "JWT_SIGNING_SECRET"
+          value = "somesigningsecret"
+        },
+        {
+          name  = "DATABASE_URL"
+          value = "postgres://${var.db_username}:${var.db_password}@${aws_db_instance.recipe_maker.endpoint}/${var.db_name}"
+        },
       ]
     },
   ])
@@ -62,6 +84,11 @@ resource "aws_ecs_task_definition" "recipe_maker" {
 
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+    "arn:aws:iam::aws:policy/AmazonRDSDataFullAccess",
+    "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+  ]
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -77,39 +104,6 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
-data "aws_iam_policy_document" "ecs_execution_policy_document" {
-  version = "2012-10-17"
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["*"]
-  }
-}
-
-
-resource "aws_iam_policy" "ecs_execution_policy" {
-  name   = "ECSExecutionPolicy"
-  policy = data.aws_iam_policy_document.ecs_execution_policy_document.json
-  tags = {
-    service = "recipe-maker"
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_execution_policy_attachment" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.ecs_execution_policy.arn
-}
-
-
-
 resource "aws_ecs_service" "recipe_maker_api" {
   name            = "recipe-maker-api"
   cluster         = aws_ecs_cluster.recipe_maker.arn
@@ -119,13 +113,13 @@ resource "aws_ecs_service" "recipe_maker_api" {
 
   network_configuration {
     subnets = [
-      aws_subnet.main_subnet_1.id,
-      aws_subnet.main_subnet_2.id,
-      aws_subnet.main_subnet_3.id,
+      aws_subnet.public_subnet_1.id,
+      aws_subnet.public_subnet_2.id,
+      aws_subnet.public_subnet_3.id,
     ]
-    security_groups = [aws_security_group.alb_security_group.id]
+    assign_public_ip = true
+    security_groups  = [aws_security_group.alb_security_group.id]
   }
-  # iam_role        = aws_iam_role.foo.arn
 
   load_balancer {
     target_group_arn = aws_lb_target_group.recipe_maker_lb_target_group.arn

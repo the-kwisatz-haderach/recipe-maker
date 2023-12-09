@@ -1,11 +1,46 @@
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
   tags = {
     service = "recipe-maker"
   }
 }
 
-resource "aws_subnet" "main_subnet_1" {
+resource "aws_subnet" "public_subnet_1" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.3.0/24"
+  availability_zone       = "${var.region}a"
+  map_public_ip_on_launch = true
+
+  tags = {
+    service = "recipe-maker"
+  }
+}
+
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.4.0/24"
+  availability_zone       = "${var.region}b"
+  map_public_ip_on_launch = true
+
+  tags = {
+    service = "recipe-maker"
+  }
+}
+
+resource "aws_subnet" "public_subnet_3" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.5.0/24"
+  availability_zone       = "${var.region}c"
+  map_public_ip_on_launch = true
+
+  tags = {
+    service = "recipe-maker"
+  }
+}
+
+resource "aws_subnet" "private_subnet_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.0.0/24"
   availability_zone = "${var.region}a"
@@ -14,7 +49,7 @@ resource "aws_subnet" "main_subnet_1" {
   }
 }
 
-resource "aws_subnet" "main_subnet_2" {
+resource "aws_subnet" "private_subnet_2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${var.region}b"
@@ -23,7 +58,7 @@ resource "aws_subnet" "main_subnet_2" {
   }
 }
 
-resource "aws_subnet" "main_subnet_3" {
+resource "aws_subnet" "private_subnet_3" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "${var.region}c"
@@ -43,11 +78,34 @@ resource "aws_security_group" "alb_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1" # Allow all outbound traffic
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "rds" {
+  vpc_id      = aws_vpc.main.id
+  name_prefix = "recipe-maker"
+
+  ingress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    service = "recipe-maker"
   }
 }
 
@@ -67,16 +125,16 @@ resource "aws_route" "route" {
 }
 
 resource "aws_route_table_association" "route_table_association_a" {
-  subnet_id      = aws_subnet.main_subnet_1.id
+  subnet_id      = aws_subnet.public_subnet_1.id
   route_table_id = aws_route_table.main_route_table.id
 }
 
 resource "aws_route_table_association" "route_table_association_b" {
-  subnet_id      = aws_subnet.main_subnet_2.id
+  subnet_id      = aws_subnet.public_subnet_2.id
   route_table_id = aws_route_table.main_route_table.id
 }
 
 resource "aws_route_table_association" "route_table_association_c" {
-  subnet_id      = aws_subnet.main_subnet_3.id
+  subnet_id      = aws_subnet.public_subnet_3.id
   route_table_id = aws_route_table.main_route_table.id
 }
