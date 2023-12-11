@@ -22,11 +22,11 @@ func NewAuthService(db userStorage) AuthService {
 func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if r.Method != http.MethodPost {
-		http.Error(w, "invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, `{"error":"invalid request method"}`, http.StatusMethodNotAllowed)
 		return
 	}
 	if r.Body == nil {
-		http.Error(w, "missing request body", http.StatusBadRequest)
+		http.Error(w, `{"error":"missing request body"}`, http.StatusBadRequest)
 		return
 	}
 	var input LoginInput
@@ -38,12 +38,12 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	u, _ := as.Db.FindUser(ctx, "", input.Username)
 	if u == nil {
-		http.Error(w, "invalid login credentials", http.StatusUnauthorized)
+		http.Error(w, `{"error":"invalid login credentials"}`, http.StatusUnauthorized)
 		return
 	}
 	err = as.Auth.ComparePasswords(ctx, input.Password, []byte(u.Password))
 	if err != nil {
-		http.Error(w, "invalid login credentials", http.StatusUnauthorized)
+		http.Error(w, `{"error":"invalid login credentials"}`, http.StatusUnauthorized)
 		return
 	}
 	tokenStr, err := as.Auth.GenerateJWT(ctx, u)
@@ -67,11 +67,11 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if r.Method != http.MethodPost {
-		http.Error(w, "invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, `{"error":"invalid request method"}`, http.StatusMethodNotAllowed)
 		return
 	}
 	if r.Body == nil {
-		http.Error(w, "missing request body", http.StatusBadRequest)
+		http.Error(w, `{"error":"missing request body"}`, http.StatusBadRequest)
 		return
 	}
 	var input SignupInput
@@ -83,7 +83,7 @@ func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	u, _ := as.Db.FindUser(ctx, "", input.Username)
 	if u != nil {
-		http.Error(w, "user already exists", http.StatusConflict)
+		http.Error(w, `{"error":"user already exists"}`, http.StatusConflict)
 		return
 	}
 	encryptedPass, err := as.Auth.HashPassword(ctx, input.Password)
@@ -93,7 +93,7 @@ func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	input.Password = string(encryptedPass)
 	if _, err = as.Db.CreateUser(ctx, input); err != nil {
-		http.Error(w, "unable to create user", http.StatusInternalServerError)
+		http.Error(w, `{"error":"unable to create user"}`, http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -101,7 +101,7 @@ func (as *AuthService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 func (as *AuthService) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, `{"error":"invalid request method"}`, http.StatusMethodNotAllowed)
 		return
 	}
 	cookie := http.Cookie{
