@@ -44,9 +44,9 @@ func main() {
 	// Healthcheck
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		if db.IsHealthy(ctx) {
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 		} else {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 	})
 
