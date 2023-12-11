@@ -1,13 +1,12 @@
+version: '3'
 services:
-  recipe-maker-api:
+  backend:
     container_name: recipe-maker-api
     build: .
     image: recipe-maker:latest
     ports:
       - 8080:8080
-    expose:
-      - 8080
-    profiles: ['full', 'backend']
+    profiles: [ 'full', 'backend' ]
     environment:
       - PORT=8080
       - DATABASE_URL=postgres://admin:admin@postgres:5432/admin
@@ -20,16 +19,33 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
-  recipe-maker-frontend:
+
+  frontend:
     container_name: recipe-maker-frontend
     build: ../recipe-maker-ui
     image: recipe-maker-frontend:latest
     ports:
       - 3000:3000
-    expose:
-      - 3000
-    profiles: ['full', 'frontend']
+    profiles: [ 'full', 'frontend' ]
     restart: always
+    environment:
+      - PROXY_HOST=reverse-proxy
+
+  reverse-proxy:
+    image: public.ecr.aws/nginx/nginx:mainline
+    container_name: reverse-proxy
+    build: ./nginx
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    depends_on:
+      - backend
+      - frontend
+      - pgadmin
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
   postgres:
     container_name: postgres
     image: postgres:16
@@ -40,13 +56,12 @@ services:
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
     ports:
       - 5432:5432
-    expose:
-      - 5432
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}' ]
       interval: 5s
       timeout: 5s
       retries: 5
+
   db-migration:
     container_name: db-migration
     build:
@@ -56,19 +71,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    profiles: ['full', 'migration']
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
     restart: always
-    logging:
-      driver: none
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - 80:80
+      - 5050:80
     depends_on:
       postgres:
         condition: service_healthy
-    profiles: ['full', 'pgadmin']
+    profiles: [ 'full', 'pgadmin' ]
