@@ -1,3 +1,6 @@
 Dockerfile
 .vscode
+.github
+gqlgen.yml
+docker-compose.yml
 terraform
