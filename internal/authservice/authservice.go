@@ -9,12 +9,14 @@ import (
 )
 
 const cookieName = "session-cookie"
+const tokenExpirationDuration = time.Hour * 24
+const secureCookie = false
 
 func NewAuthService(db userStorage) AuthService {
 	var auth = Authenticator{
 		signingSecret:           config.Config.JWT_SIGNING_SECRET,
 		shouldValidateJwt:       config.Config.VALIDATE_JWT,
-		tokenExpirationDuration: time.Hour * 24,
+		tokenExpirationDuration: tokenExpirationDuration,
 	}
 	return AuthService{Db: db, Auth: &auth}
 }
@@ -56,8 +58,8 @@ func (as *AuthService) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenStr,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Secure:   true,
-		Expires:  time.Now().Add(time.Hour * 24),
+		Secure:   secureCookie,
+		Expires:  time.Now().Add(tokenExpirationDuration),
 		Path:     "/",
 	}
 	http.SetCookie(w, &cookie)
@@ -109,7 +111,7 @@ func (as *AuthService) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Secure:   true,
+		Secure:   secureCookie,
 		MaxAge:   -1,
 		Path:     "/",
 	}
