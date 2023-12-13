@@ -32,7 +32,7 @@ services:
       - PROXY_HOST=reverse-proxy
 
   reverse-proxy:
-    image: public.ecr.aws/nginx/nginx:mainline
+    image: nginx:latest
     container_name: reverse-proxy
     build: ./nginx
     ports:
