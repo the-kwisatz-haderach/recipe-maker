@@ -32,7 +32,7 @@ services:
       - PROXY_HOST=reverse-proxy
 
   reverse-proxy:
-    image: nginx:latest
+    image: nginx:1.24.0-alpine-slim
     container_name: reverse-proxy
     build: ./nginx
     ports:
