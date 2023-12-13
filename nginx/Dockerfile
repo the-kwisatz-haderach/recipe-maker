@@ -1,4 +1,13 @@
-FROM public.ecr.aws/nginx/nginx:mainline
+# syntax=docker/dockerfile:1
+FROM nginx:latest
 
 ADD index.html /etc/nginx/html/index.html
-ADD nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=3s --start-interval=5s \
+  CMD service nginx status
+
+CMD ["nginx", "-g", "daemon off;"]
