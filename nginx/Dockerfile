@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM nginx:1.24.0-alpine-slim
+FROM nginx:latest
 
 ADD index.html /etc/nginx/html/index.html
 COPY nginx.conf /etc/nginx/nginx.conf

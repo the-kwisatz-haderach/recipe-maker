@@ -16,12 +16,6 @@ variable "github_account" {
   default     = "the-kwisatz-haderach"
 }
 
-variable "github_repo" {
-  description = "github repository"
-  type        = string
-  default     = "recipe-maker"
-}
-
 variable "db_password" {
   description = "root user password for db"
   type        = string
@@ -44,4 +38,22 @@ variable "db_name" {
   description = "root username for db"
   type        = string
   default     = "recipe_maker"
+}
+
+variable "pgadmin_default_email" {
+  description = "default email for pgadmin"
+  type        = string
+  sensitive   = true
+}
+
+variable "pgadmin_default_password" {
+  description = "default password for pgadmin"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repositories" {
+  description = "github repositories allowed identity federation"
+  type        = set(string)
+  default     = ["recipe-maker-ui", "recipe-maker"]
 }
