@@ -22,6 +22,7 @@ go.work
 
 .env
 secrets*
+tern.*.conf
 
 # Terraform
 .terraform
