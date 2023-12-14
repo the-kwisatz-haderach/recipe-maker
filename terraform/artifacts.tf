@@ -102,7 +102,12 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecr_policy_attachment"
 }
 
 resource "aws_ecr_lifecycle_policy" "remove_untagged" {
-  repository = aws_ecr_repository.recipe_maker_registry.name
+  for_each = toset([
+    aws_ecr_repository.recipe_maker_registry.name,
+    aws_ecr_repository.recipe_maker_nginx.name,
+    aws_ecr_repository.recipe_maker_ui.name,
+  ])
+  repository = each.value
 
   policy = jsonencode({
     rules = [
