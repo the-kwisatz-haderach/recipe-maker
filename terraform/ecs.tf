@@ -224,7 +224,6 @@ resource "aws_ecs_service" "recipe_maker_api" {
     subnets = [
       aws_subnet.public_subnet_1.id,
       aws_subnet.public_subnet_2.id,
-      aws_subnet.public_subnet_3.id,
     ]
     assign_public_ip = true
     security_groups  = [aws_security_group.alb_security_group.id]
@@ -264,7 +263,6 @@ resource "aws_ecs_service" "recipe_maker_ui" {
     subnets = [
       aws_subnet.public_subnet_1.id,
       aws_subnet.public_subnet_2.id,
-      aws_subnet.public_subnet_3.id,
     ]
     assign_public_ip = true
     security_groups  = [aws_security_group.alb_security_group.id]

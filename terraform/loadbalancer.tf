@@ -6,7 +6,6 @@ resource "aws_lb" "recipe_maker_lb" {
   subnets = [
     aws_subnet.public_subnet_1.id,
     aws_subnet.public_subnet_2.id,
-    aws_subnet.public_subnet_3.id,
   ]
 
   enable_deletion_protection = false
@@ -15,7 +14,6 @@ resource "aws_lb" "recipe_maker_lb" {
     aws_security_group.alb_security_group,
     aws_subnet.public_subnet_1,
     aws_subnet.public_subnet_2,
-    aws_subnet.public_subnet_3,
   ]
   tags = {
     service = "recipe-maker"
@@ -66,7 +64,6 @@ resource "aws_lb_listener" "front_end" {
 
 resource "aws_lb_listener_rule" "api" {
   listener_arn = aws_lb_listener.front_end.arn
-  priority     = 2
 
   action {
     type             = "forward"

@@ -3,7 +3,6 @@ resource "aws_db_subnet_group" "recipe_maker" {
   subnet_ids = [
     aws_subnet.public_subnet_1.id,
     aws_subnet.public_subnet_2.id,
-    aws_subnet.public_subnet_3.id,
   ]
 
   tags = {
@@ -34,7 +33,7 @@ resource "aws_db_instance" "recipe_maker" {
   db_subnet_group_name   = aws_db_subnet_group.recipe_maker.name
   vpc_security_group_ids = [aws_security_group.rds.id]
   parameter_group_name   = aws_db_parameter_group.recipe_maker.name
-  publicly_accessible    = true
+  publicly_accessible    = false
   skip_final_snapshot    = true
 
   depends_on = [

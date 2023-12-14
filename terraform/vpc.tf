@@ -30,17 +30,6 @@ resource "aws_subnet" "public_subnet_2" {
   }
 }
 
-resource "aws_subnet" "public_subnet_3" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.5.0/24"
-  availability_zone       = "${var.region}c"
-  map_public_ip_on_launch = true
-
-  tags = {
-    service = "recipe-maker"
-  }
-}
-
 resource "aws_subnet" "private_subnet_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.0.0/24"
@@ -54,15 +43,6 @@ resource "aws_subnet" "private_subnet_2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${var.region}b"
-  tags = {
-    service = "recipe-maker"
-  }
-}
-
-resource "aws_subnet" "private_subnet_3" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "${var.region}c"
   tags = {
     service = "recipe-maker"
   }
@@ -124,11 +104,10 @@ resource "aws_security_group" "rds" {
   name_prefix = "recipe-maker"
 
   ingress {
-    from_port = var.db_port
-    to_port   = var.db_port
-    #security_groups = [aws_security_group.alb_security_group.id]
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = var.db_port
+    to_port         = var.db_port
+    security_groups = [aws_security_group.alb_security_group.id]
+    protocol        = "tcp"
   }
 
   tags = {
@@ -143,7 +122,7 @@ resource "aws_security_group" "ecs_services" {
   ingress {
     from_port       = 0
     to_port         = 0
-    protocol        = "-1" # Allow all outbound traffic
+    protocol        = "-1"
     security_groups = [aws_security_group.alb_security_group.id]
   }
 
@@ -174,10 +153,5 @@ resource "aws_route_table_association" "route_table_association_a" {
 
 resource "aws_route_table_association" "route_table_association_b" {
   subnet_id      = aws_subnet.public_subnet_2.id
-  route_table_id = aws_route_table.main_route_table.id
-}
-
-resource "aws_route_table_association" "route_table_association_c" {
-  subnet_id      = aws_subnet.public_subnet_3.id
   route_table_id = aws_route_table.main_route_table.id
 }

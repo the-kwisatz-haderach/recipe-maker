@@ -4,6 +4,9 @@ resource "aws_s3_bucket" "recipe_maker_bucket" {
   tags = {
     service = "recipe-maker"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "recipe_maker" {
@@ -23,4 +26,7 @@ resource "aws_s3_bucket_acl" "recipe_maker" {
 
   bucket = aws_s3_bucket.recipe_maker_bucket.id
   acl    = "private"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
